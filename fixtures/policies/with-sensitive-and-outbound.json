@@ -1,0 +1,27 @@
+{
+  "version": "0.1.0",
+  "sensitiveFiles": [
+    ".env",
+    "id_rsa",
+    ".netrc"
+  ],
+  "sensitiveEnvKeys": [
+    "AWS_SECRET_ACCESS_KEY",
+    "GITHUB_TOKEN",
+    "OPENAI_API_KEY"
+  ],
+  "outboundRules": [
+    {
+      "pattern": "evil.example.com",
+      "action": "block"
+    },
+    {
+      "pattern": "api.trusted.com",
+      "action": "allow"
+    }
+  ],
+  "recipientThreshold": {
+    "maxRecipients": 3,
+    "action": "block"
+  }
+}

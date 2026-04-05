@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+.pnpm-store/
+*.tsbuildinfo
+*.tmp
+*.tmp.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+
+# Internal planning and review artifacts - keep local only
+ClaudeDevPlan.txt
+docs/ClaudeDevPlan.txt
+docs/Debug.md
+docs/PROJECT_CONTEXT.md
+docs/UpdatePlan.md
+docs/PRDs/

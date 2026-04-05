@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "references": [
+    { "path": "../moshe-spec" },
+    { "path": "../moshe-core" },
+    { "path": "../moshe-store-memory" },
+    { "path": "../moshe-store-file" },
+    { "path": "../moshe-adapter-generic-tools" },
+    { "path": "../moshe-adapter-openai" },
+    { "path": "../moshe-adapter-anthropic" }
+  ],
+  "include": ["src"]
+}

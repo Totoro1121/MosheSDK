@@ -1,0 +1,17 @@
+{
+  "actionId": "55555555-5555-5555-5555-555555555555",
+  "sessionId": "fixture-session",
+  "timestamp": "2026-04-01T00:00:04.000Z",
+  "framework": "generic",
+  "actionType": "file_write",
+  "operation": "write",
+  "toolName": "write_file",
+  "arguments": {
+    "path": "generated_script.py",
+    "content": "print('hello')",
+    "agentAuthored": true
+  },
+  "referencedPaths": [
+    "generated_script.py"
+  ]
+}

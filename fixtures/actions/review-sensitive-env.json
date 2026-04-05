@@ -1,0 +1,13 @@
+{
+  "actionId": "fixture-review-sensitive-env-001",
+  "sessionId": "session-fixture-01",
+  "timestamp": "2026-04-01T00:00:00.000Z",
+  "framework": "generic",
+  "actionType": "command_exec",
+  "operation": "exec",
+  "toolName": "bash",
+  "arguments": {
+    "command": "echo $AWS_SECRET_ACCESS_KEY"
+  }
+}
+

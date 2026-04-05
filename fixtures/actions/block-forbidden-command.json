@@ -1,0 +1,13 @@
+{
+  "actionId": "22222222-2222-2222-2222-222222222222",
+  "sessionId": "fixture-session",
+  "timestamp": "2026-04-01T00:00:01.000Z",
+  "framework": "generic",
+  "actionType": "command_exec",
+  "operation": "exec",
+  "toolName": "bash",
+  "arguments": {
+    "command": "rm -rf /"
+  }
+}
+

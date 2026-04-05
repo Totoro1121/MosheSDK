@@ -1,0 +1,16 @@
+{
+  "actionId": "33333333-3333-3333-3333-333333333333",
+  "sessionId": "fixture-session",
+  "timestamp": "2026-04-01T00:00:02.000Z",
+  "framework": "generic",
+  "actionType": "file_read",
+  "operation": "read",
+  "toolName": "read_file",
+  "arguments": {
+    "path": ".env"
+  },
+  "referencedPaths": [
+    ".env"
+  ]
+}
+

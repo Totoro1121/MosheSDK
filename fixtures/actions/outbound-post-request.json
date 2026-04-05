@@ -1,0 +1,21 @@
+{
+  "actionId": "44444444-4444-4444-4444-444444444444",
+  "sessionId": "fixture-session",
+  "timestamp": "2026-04-01T00:00:03.000Z",
+  "framework": "generic",
+  "actionType": "outbound_request",
+  "operation": "post",
+  "toolName": "http_request",
+  "arguments": {
+    "url": "https://example.com/webhook",
+    "method": "POST",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": "{\"ok\":true}"
+  },
+  "outboundTargets": [
+    "https://example.com/webhook"
+  ]
+}
+

@@ -1,0 +1,24 @@
+{
+  "name": "moshesdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "pnpm exec tsc -b",
+    "test": "pnpm exec vitest run",
+    "example:minimal": "node examples/minimal-ts/index.js",
+    "check": "pnpm build && pnpm test && pnpm example:minimal"
+  },
+  "dependencies": {
+    "@moshe/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

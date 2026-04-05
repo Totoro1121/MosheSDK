@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/moshe-spec" },
+    { "path": "./packages/moshe-core" },
+    { "path": "./packages/moshe-store-memory" },
+    { "path": "./packages/moshe-store-file" },
+    { "path": "./packages/moshe-adapter-generic-tools" },
+    { "path": "./packages/moshe-adapter-openai" },
+    { "path": "./packages/moshe-adapter-anthropic" },
+    { "path": "./packages/moshe-sdk-ts" }
+  ]
+}

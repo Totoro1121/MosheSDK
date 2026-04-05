@@ -1,0 +1,21 @@
+{
+  "actionId": "fixture-block-recipients-001",
+  "sessionId": "session-fixture-01",
+  "timestamp": "2026-04-01T00:00:00.000Z",
+  "framework": "generic",
+  "actionType": "message_send",
+  "operation": "send",
+  "toolName": "send_email",
+  "arguments": {
+    "recipients": [
+      "a@x.com",
+      "b@x.com",
+      "c@x.com",
+      "d@x.com",
+      "e@x.com"
+    ],
+    "subject": "Report",
+    "body": "Here is the data."
+  }
+}
+

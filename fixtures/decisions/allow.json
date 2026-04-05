@@ -1,0 +1,9 @@
+{
+  "decision": "ALLOW",
+  "reasonCodes": [
+    "NO_POLICY_MATCH",
+    "NO_APPROVAL_REQUIRED"
+  ],
+  "summary": "Action allowed."
+}
+
