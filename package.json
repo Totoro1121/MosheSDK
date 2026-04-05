@@ -2,6 +2,26 @@
   "name": "moshesdk",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
+  "description": "Runtime security SDK for AI agents — deterministic policy enforcement, approval workflows, taint tracking, and chain-risk detection.",
+  "keywords": [
+    "ai-agents",
+    "agent-security",
+    "llm",
+    "policy",
+    "safety",
+    "tool-use",
+    "taint",
+    "approval"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Totoro1121/MosheSDK.git"
+  },
+  "homepage": "https://github.com/Totoro1121/MosheSDK#readme",
+  "bugs": {
+    "url": "https://github.com/Totoro1121/MosheSDK/issues"
+  },
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "engines": {

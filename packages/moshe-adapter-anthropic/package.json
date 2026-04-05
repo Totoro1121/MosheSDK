@@ -1,6 +1,24 @@
 {
   "name": "@moshe/adapter-anthropic",
   "version": "0.1.0",
+  "description": "MosheSDK Anthropic tool-use adapter — no anthropic SDK dependency required",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ai-agents",
+    "agent-security",
+    "llm-safety",
+    "policy",
+    "tool-use"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Totoro1121/MosheSDK.git",
+    "directory": "packages/moshe-adapter-anthropic"
+  },
+  "homepage": "https://github.com/Totoro1121/MosheSDK#readme",
+  "bugs": {
+    "url": "https://github.com/Totoro1121/MosheSDK/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

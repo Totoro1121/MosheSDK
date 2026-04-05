@@ -5,8 +5,24 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "moshe"
 version = "0.1.0"
+description = "Runtime security SDK for AI agents — policy enforcement, approval workflows, taint tracking, and chain-risk detection."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "MosheSDK Contributors"}]
 requires-python = ">=3.11"
 dependencies = []
+keywords = ["ai-agents", "agent-security", "llm", "policy", "safety", "tool-use"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -14,6 +30,11 @@ dev = [
     "pytest-asyncio>=0.23",
     "mypy>=1.9",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Totoro1121/MosheSDK"
+Repository = "https://github.com/Totoro1121/MosheSDK"
+Issues = "https://github.com/Totoro1121/MosheSDK/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

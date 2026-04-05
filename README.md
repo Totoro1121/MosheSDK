@@ -1,63 +1,247 @@
 # MosheSDK
 
-MosheSDK is an open source agent-safety SDK for developers building LLM agents with tool use, command execution, file access, outbound requests, and approval workflows.
+**Runtime security for AI agents.** Deterministic policy enforcement, approval
+workflows, taint tracking, and chain-risk detection — all in-process, without
+model calls.
 
-It is headless by design and currently ships:
+[![npm](https://img.shields.io/npm/v/@moshe/sdk)](https://www.npmjs.com/package/@moshe/sdk)
+[![PyPI](https://img.shields.io/pypi/v/moshe)](https://pypi.org/project/moshe/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](packages/moshe-sdk-ts)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](packages/moshe-sdk-python)
 
-- a TypeScript SDK centered on `@moshe/sdk`
-- a standalone Python SDK published as `moshe`
+> 📹 **Demo video coming soon.**
 
-## What MosheSDK Gives You
+---
 
-MosheSDK sits between your agent and the real side effects it wants to perform.
+## The Problem
 
-It can:
+LLM agents are increasingly trusted to call tools, execute commands, read files,
+and make outbound requests on behalf of users. The model decides what to do —
+but there is no guarantee the decision is safe.
 
-- deterministically block or review risky actions before execution
-- apply policy to tools, commands, files, outbound requests, and recipients
-- require operator approval for reviewable actions
-- track taint, provenance, lineage, and session-level chain risk
-- emit telemetry and accept feedback
-- wrap generic tool execution or vendor-specific tool-call formats
+Prompt injection, data exfiltration chains, tainted artifact propagation, and
+runaway multi-step risk are real attack surfaces that grow with every new
+capability you give your agent.
 
-## Where It Fits
+Most guardrails evaluate actions one at a time and rely on a model to judge them.
+That is slow, probabilistic, and expensive. **Moshe takes a different approach.**
 
-The integration pattern is simple:
+---
 
-1. Your model decides it wants to call a tool.
-2. You convert that intent into a Moshe-evaluable action, or use one of Moshe’s adapters.
-3. Moshe returns `ALLOW`, `REVIEW`, or `BLOCK`.
-4. Only `ALLOW` reaches the real side effect.
+## Why Moshe?
 
-In practice, Moshe becomes the safety gate in your agent runtime.
+**Deterministic, not probabilistic.**
+Every enforcement decision is a rule evaluation. A blocked command is blocked
+every time, in under a millisecond, with no LLM involved. There is no "97%"
+confidence in a block.
+
+**Session memory across the full agent run.**
+A single read of `/etc/passwd` is suspicious but permitted. That same read
+followed by an outbound POST three turns later triggers `EXFIL_CHAIN_PRECURSOR`.
+Moshe tracks taint, provenance, and risk counters across the entire session — not
+just the current action.
+
+**In-process, no network hop.**
+Moshe runs as a library inside your existing agent runtime. No sidecar, no proxy,
+no extra infrastructure. Add it with a one-line import.
+
+**TypeScript and Python, same mental model.**
+Identical 7-stage pipeline, identical concepts, identical defaults. No context
+switch when working across stacks.
+
+**Composable at every layer.**
+Plug in custom analyzers, external review services via HTTP, your own approval
+backend, or multiple telemetry sinks. Nothing is hardwired.
+
+**Vendor-agnostic.**
+First-class adapters for OpenAI tool calls and Anthropic `tool_use` blocks — with
+no dependency on either vendor SDK. Works with any agent framework or custom
+runner.
+
+---
+
+## What It Protects Against
+
+| Threat | How Moshe Handles It |
+|---|---|
+| Prompt injection → destructive command | `forbiddenCommands` rules; `CommandIntentAnalyzer` detects encoded payloads and pipe-to-shell patterns |
+| Sensitive credential access | `forbiddenFiles` / `sensitiveFiles` block or review access to `.env`, `id_rsa`, and similar |
+| Data exfiltration chain | Taint engine marks the session after a sensitive read; a later outbound request triggers `EXFIL_CHAIN_PRECURSOR` |
+| Outbound to attacker-controlled domain | `outboundRules` with exact match, subdomain wildcard (`*.evil.com`), or local-network detection |
+| Mass recipient messaging | `recipientThreshold` blocks sends above the configured limit |
+| Tainted artifact propagation | Writes that reference tainted artifacts inherit taint — tracked across the artifact store with full provenance chains |
+| Runaway escalation | `reviewCount` and `blockCount` escalate session `riskLevel`; `CHAIN_RISK_HIGH` locks down further high-risk operations |
+| Agent-authored code execution | `agentAuthored` flag triggers `AGENT_AUTHORED_EXECUTION` review before the generated code runs |
+
+---
+
+## Feature Overview
+
+| Feature | TypeScript | Python |
+|---|:---:|:---:|
+| 7-stage deterministic pipeline | ✓ | ✓ |
+| Static policy engine (commands, files, outbound, recipients) | ✓ | ✓ |
+| Intent analyzers (command, file enumeration, outbound classification) | ✓ | ✓ |
+| Outbound and network guard (domain, wildcard, local-network) | ✓ | ✓ |
+| Taint and provenance engine | ✓ | ✓ |
+| Advanced lineage (BFS traversal, cycle detection, configurable depth) | ✓ | ✓ |
+| Chain risk and session context (EXFIL precursor, CHAIN_RISK_HIGH) | ✓ | ✓ |
+| Approval workflows (in-process, ALLOW_ONCE, ALLOW_SESSION replay) | ✓ | ✓ |
+| Semantic review plugin (Noop / Callback / HTTP decision provider) | ✓ | ✓ |
+| Policy presets (coding agent, browsing agent, assistant with tools) | ✓ | ✓ |
+| Telemetry pipeline and feedback (false-positive / false-negative) | ✓ | ✓ |
+| GenericAdapter | ✓ | ✓ |
+| OpenAI tool-call adapter | ✓ | ✓ |
+| Anthropic tool-use adapter | ✓ | ✓ |
+| MemoryStore | ✓ | ✓ |
+| FileStore | ✓ | — |
+| Zero mandatory runtime dependencies | ✓ | ✓ |
+
+---
+
+## Use Cases
+
+### Coding Agent
+
+A coding agent with shell access and unrestricted file writes is one of the
+highest-risk agent configurations in existence. Moshe provides policy-enforced
+boundaries: block destructive commands, review writes to sensitive paths, and flag
+taint when the agent reads its own outputs and later tries to execute them.
+
+### Browsing and Research Agent
+
+Outbound requests are the primary exfil surface for a browsing agent. Moshe
+blocks known bad domains, detects raw-IP targets, and catches staged exfil chains
+where the agent reads sensitive data and later attempts to POST it externally.
+
+### Email and Communication Agent
+
+Moshe enforces recipient limits and blocks outbound sends to unconfigured domains,
+preventing a compromised agent from becoming a mass mailer or leaking data through
+a communication channel.
+
+### Autonomous Multi-Step Workflow
+
+For long-running unattended agents, chain risk memory is essential. Moshe
+escalates session risk level as blocks and reviews accumulate, reaching a lockdown
+state before a compromised agent can cause serious damage — without requiring
+human intervention at every step.
+
+---
+
+## How It Works
+
+Every action passes through a deterministic 7-stage pipeline:
+
+```
+ActionEnvelope
+     │
+     ▼
+1. Normalize      — validate shape, fill defaults
+2. Enrich         — load policy, session state, artifact context
+3. StaticPolicy   — deterministic rule evaluation (block / review / allow)
+4. Analyze        — intent analyzers + taint engine + chain risk + plugins
+5. ApprovalCheck  — replay stored approvals or invoke approval provider
+6. Compose        — merge all stage outputs into the final DecisionEnvelope
+7. Telemetry      — publish pipeline events to configured sinks
+     │
+     ▼
+DecisionEnvelope  →  ALLOW | REVIEW | BLOCK
+```
+
+`ALLOW` is the only outcome that reaches the real side effect. The adapter layer
+ensures this invariant at the call site — `execute()` is never called on `BLOCK`
+or `REVIEW`.
+
+---
+
+## Installation
+
+**TypeScript:**
+
+```bash
+pnpm add @moshe/sdk
+# or
+npm install @moshe/sdk
+```
+
+**Python:**
+
+```bash
+pip install moshe
+```
+
+No transitive runtime dependencies in either SDK.
+
+---
 
 ## Quick Start
 
-TypeScript workspace:
+**TypeScript:**
 
-```powershell
-npx pnpm@9.15.9 install
-npx pnpm@9.15.9 build
-npx pnpm@9.15.9 test
-node examples/minimal-ts/index.js
+```typescript
+import { GenericAdapter, MemoryStore, Moshe } from '@moshe/sdk';
+
+const moshe = new Moshe({
+  policy: {
+    forbiddenCommands: ['rm\\s+-rf'],
+    forbiddenFiles: ['.env'],
+    sensitiveFiles: ['id_rsa'],
+    outboundRules: [{ pattern: 'pastebin.com', action: 'block' }]
+  },
+  store: new MemoryStore(),
+  onError: 'BLOCK',
+  onUnhandledReview: 'BLOCK'
+});
+
+const session = moshe.withSession('run-001');
+const adapter = new GenericAdapter(session, { framework: 'my-agent' });
+
+// execute() is only called if the engine returns ALLOW
+const output = await adapter.wrapCommand({
+  command: 'ls -la',
+  toolName: 'shell',
+  execute: async () => runShell('ls -la')
+});
 ```
 
-Python package:
+**Python:**
 
-```powershell
-cd packages/moshe-sdk-python
-python -m pip install -e ".[dev]"
-python -m pytest
-python -m mypy
+```python
+from moshe import GenericAdapter, MemoryStore, Moshe, PolicyConfig
+
+moshe = Moshe(
+    policy=PolicyConfig(
+        forbidden_commands=[r"rm\s+-rf"],
+        forbidden_files=[".env"],
+        sensitive_files=["id_rsa"],
+    ),
+    store=MemoryStore(),
+    on_error="BLOCK",
+    on_unhandled_review="BLOCK",
+)
+
+session = moshe.with_session("run-001")
+adapter = GenericAdapter(session, framework="my-agent")
+
+output = await adapter.wrap_command(
+    command="ls -la",
+    tool_name="shell",
+    execute=lambda: run_shell("ls -la"),
+)
 ```
+
+---
 
 ## Agent Integration Guide
 
-### 1. Create One Shared Moshe Instance
+### 1. One Moshe Instance Per Process
 
-Create one `Moshe` instance for your agent runtime and keep it alive for the life of the worker or process.
+Create one `Moshe` instance for the life of your worker or process. It is
+safe to share across concurrent sessions.
 
-TypeScript:
+**TypeScript:**
 
 ```typescript
 import {
@@ -89,7 +273,7 @@ const moshe = new Moshe({
 });
 ```
 
-Python:
+**Python:**
 
 ```python
 from moshe import InProcessApprovalProvider, MemoryStore, MemoryTelemetrySink, Moshe, PolicyConfig
@@ -112,263 +296,253 @@ moshe = Moshe(
 )
 ```
 
-### 2. Bind Each Agent Conversation or Run to a Session
+### 2. One Session Per Conversation or Run
 
-Use one session per user conversation, run, task, or workflow. Session state is how Moshe tracks approval replay, taint, and chain risk.
+Session state is how Moshe tracks approval replay, taint, and chain risk. Use one
+session per user conversation, agent run, or workflow. Session IDs are opaque
+strings — use whatever is natural for your runtime.
 
-TypeScript:
+**TypeScript:**
 
 ```typescript
 const session = moshe.withSession(`run-${runId}`);
 ```
 
-Python:
+**Python:**
 
 ```python
 session = moshe.with_session(f"run-{run_id}")
 ```
 
-### 3. Put Moshe in Front of Real Tools
+### 3. Choose Your Adapter
 
-If your agent has tools like `shell`, `read_file`, `write_file`, or `http_request`, do not call them directly from model output.
+Use the adapter that matches how your agent framework delivers tool calls:
 
-Wrap them through:
+- **`GenericAdapter`** — your framework already normalises tool intent
+- **`OpenAIAdapter`** — you receive OpenAI `ChatCompletionMessageToolCall` objects
+- **`AnthropicAdapter`** — you receive Anthropic `ToolUseBlock` objects
 
-- `GenericAdapter` if your runtime already has its own normalized tool abstraction
-- `OpenAIAdapter` if you receive OpenAI function/tool calls
-- `AnthropicAdapter` if you receive Anthropic `tool_use` blocks
-
-#### Generic TypeScript Example
-
-```typescript
-import { BlockedActionError, GenericAdapter, ReviewRequiredError } from '@moshe/sdk';
-
-const adapter = new GenericAdapter(session, {
-  framework: 'my-agent-runtime'
-});
-
-try {
-  const result = await adapter.wrapCommand({
-    command: 'ls -la',
-    toolName: 'shell',
-    execute: async () => {
-      return await actuallyRunShellCommand('ls -la');
-    }
-  });
-
-  console.log(result);
-} catch (error) {
-  if (error instanceof BlockedActionError) {
-    console.error('Blocked:', error.decision);
-  }
-
-  if (error instanceof ReviewRequiredError) {
-    console.error('Needs review:', error.decision);
-  }
-}
-```
-
-#### Generic Python Example
-
-```python
-from moshe import BlockedActionError, GenericAdapter, ReviewRequiredError
-
-adapter = GenericAdapter(session, framework="my-agent-runtime")
-
-try:
-    result = await adapter.wrap_command(
-        command="ls -la",
-        tool_name="shell",
-        execute=lambda: actually_run_shell_command("ls -la"),
-    )
-    print(result)
-except BlockedActionError as error:
-    print("Blocked:", error.decision)
-except ReviewRequiredError as error:
-    print("Needs review:", error.decision)
-```
-
-### 4. Use Vendor Adapters When Your Model Already Produces Tool-Call Objects
-
-If your agent framework gives you vendor-native tool-call payloads, use the matching Moshe adapter instead of building envelopes by hand.
-
-#### OpenAI TypeScript Example
+**OpenAI (TypeScript):**
 
 ```typescript
 import { OpenAIAdapter } from '@moshe/sdk';
 
 const adapter = new OpenAIAdapter(session);
-
-const value = await adapter.wrapToolCall({
-  toolCall,
-  execute: async () => actuallyRunTool(toolCall)
+const result = await adapter.wrapToolCall({
+  toolCall,            // OpenAI tool call object
+  execute: async () => runTool(toolCall)
 });
 ```
 
-#### OpenAI Python Example
+**OpenAI (Python):**
 
 ```python
 from moshe import OpenAIAdapter
 
 adapter = OpenAIAdapter(session)
-
-value = await adapter.wrap_tool_call(
+result = await adapter.wrap_tool_call(
     tool_call=tool_call,
-    execute=lambda: actually_run_tool(tool_call),
+    execute=lambda: run_tool(tool_call),
 )
 ```
 
-#### Anthropic TypeScript Example
+**Anthropic (TypeScript):**
 
 ```typescript
 import { AnthropicAdapter } from '@moshe/sdk';
 
 const adapter = new AnthropicAdapter(session);
-
-const value = await adapter.wrapToolUse({
-  toolUse,
-  execute: async () => actuallyRunTool(toolUse)
+const result = await adapter.wrapToolUse({
+  toolUse,             // Anthropic tool_use block
+  execute: async () => runTool(toolUse)
 });
 ```
 
-#### Anthropic Python Example
+**Anthropic (Python):**
 
 ```python
 from moshe import AnthropicAdapter
 
 adapter = AnthropicAdapter(session)
-
-value = await adapter.wrap_tool_use(
+result = await adapter.wrap_tool_use(
     tool_use=tool_use,
-    execute=lambda: actually_run_tool(tool_use),
+    execute=lambda: run_tool(tool_use),
 )
 ```
 
-### 5. Decide How You Want Review to Work
+### 4. Non-Throwing Variant for Inline Handling
 
-`REVIEW` only becomes useful when you define what happens next.
+All `wrap*` methods throw on `BLOCK` and `REVIEW`. Every method has a `tryWrap*`
+(`try_wrap_*` in Python) variant that returns an `AdapterResult` discriminated
+union instead of throwing, for callers that prefer explicit branching.
 
-Common options:
+**TypeScript:**
 
-- `onUnhandledReview: 'BLOCK'` for strict unattended agents
-- `onUnhandledReview: 'ALLOW'` for sandboxed or low-risk environments
-- `InProcessApprovalProvider` for a real approval loop with replay
-- `CallbackDecisionProvider` or `HttpDecisionProvider` if you want a semantic or external review plugin
+```typescript
+const result = await adapter.tryWrapCommand({ command, toolName, execute });
 
-Practical rule:
+if (result.outcome === 'ALLOW') {
+  console.log(result.value);
+} else if (result.outcome === 'BLOCK') {
+  console.error('Blocked:', result.decision.summary);
+} else {
+  console.warn('Review required:', result.decision.approvalRequest);
+}
+```
 
-- Use `BLOCK` by default in production until you have a deliberate approval story.
+**Python:**
+
+```python
+from moshe import AllowResult, BlockResult, ReviewResult
+
+result = await adapter.try_wrap_command(command=cmd, tool_name="shell", execute=execute)
+
+if isinstance(result, AllowResult):
+    print(result.value)
+elif isinstance(result, BlockResult):
+    print("Blocked:", result.decision.summary)
+else:
+    print("Review required:", result.decision.approval_request)
+```
+
+### 5. Configure Review Handling
+
+`REVIEW` is only useful when you define what happens next:
+
+- `onUnhandledReview: 'BLOCK'` — safest default for unattended agents
+- `onUnhandledReview: 'ALLOW'` — permissive mode for sandboxed environments
+- `InProcessApprovalProvider` — real human-in-the-loop approval with replay
+- `HttpDecisionProvider` — delegate review to an external service
+
+In production, default to `BLOCK` until you have a deliberate approval story.
 
 ### 6. Attach Telemetry Early
 
-Telemetry is one of the fastest ways to debug agent safety behavior.
+Telemetry is the fastest way to debug agent safety behavior in development.
 
-TypeScript:
+**TypeScript:**
 
 ```typescript
-import { MemoryTelemetrySink } from '@moshe/sdk';
-
 const sink = new MemoryTelemetrySink();
-const moshe = new Moshe({
-  policy,
-  store,
-  telemetrySinks: [sink],
-  onError: 'BLOCK',
-  onUnhandledReview: 'BLOCK'
-});
+// ... build moshe with telemetrySinks: [sink] ...
 
-const decision = await moshe.evaluate(action);
+const decision = await session.evaluate(action);
 console.log(sink.getDecisionEvent(action.actionId));
 ```
 
-Python:
+**Python:**
 
 ```python
-from moshe import MemoryTelemetrySink
-
 sink = MemoryTelemetrySink()
-moshe = Moshe(
-    policy=policy,
-    store=store,
-    telemetry_sinks=[sink],
-    on_error="BLOCK",
-    on_unhandled_review="BLOCK",
-)
+# ... build moshe with telemetry_sinks=[sink] ...
+
+decision = await session.evaluate(...)
+print(sink.get_decision_event(action_id))
 ```
 
 ### 7. Start Small With Policy
 
-A good first production policy is usually:
+A strong first production policy:
 
-- block obviously destructive commands
-- block known exfil domains
-- review sensitive file access
-- review or block mass-recipient actions
+- Block obviously destructive commands
+- Block known exfil domains
+- Review sensitive file access
+- Review or block mass-recipient actions
 
-You do not need to model every risk on day one. Moshe is most effective when it guards a few high-value boundaries first, then expands.
+You do not need to model every risk on day one. Moshe is most effective when
+guarding a few high-value boundaries first.
 
-## Recommended Integration Patterns
+---
 
-### Pattern A: Safety Gate Around Existing Tools
+## Recommended Patterns
 
-Best when you already have an agent framework and just need a policy/approval layer.
+**Pattern A — Safety Gate Around Existing Tools**
+You already have an agent framework and need a policy/approval layer.
+Use: `Moshe` + `MemoryStore` + `GenericAdapter`.
 
-Use:
+**Pattern B — Vendor Tool-Call Interception**
+Your model emits OpenAI or Anthropic tool calls directly.
+Use: `OpenAIAdapter` or `AnthropicAdapter` with `MosheSession` or root `Moshe`.
 
-- `Moshe`
-- `MemoryStore` or your own store implementation
-- `GenericAdapter`
+**Pattern C — Centralised Review Service**
+One shared safety backend across many agent workers.
+Use: `HttpDecisionProvider` + telemetry sinks + a persistent store implementation.
 
-### Pattern B: Vendor Tool-Call Interception
+---
 
-Best when your model already emits OpenAI or Anthropic tool calls directly.
+## Repository Layout
 
-Use:
-
-- `OpenAIAdapter` or `AnthropicAdapter`
-- `MosheSession` or root `Moshe`
-
-### Pattern C: Centralized Review Service
-
-Best when you want one shared safety backend across many agent workers.
-
-Use:
-
-- `HttpDecisionProvider`
-- telemetry sinks
-- persistent store implementation
-
-## TypeScript Hello World
-
-```typescript
-import { MemoryStore, Moshe } from '@moshe/sdk';
-
-const moshe = new Moshe({
-  policy: {
-    forbiddenCommands: ['rm\\s+-rf\\s+/'],
-    forbiddenFiles: ['.env']
-  },
-  store: new MemoryStore(),
-  onError: 'BLOCK',
-  onUnhandledReview: 'BLOCK'
-});
-
-const decision = await moshe.evaluate({
-  sessionId: 'session-abc',
-  framework: 'generic',
-  actionType: 'command_exec',
-  operation: 'exec',
-  toolName: 'bash',
-  arguments: {
-    command: 'ls -la'
-  }
-});
-
-console.log(decision);
 ```
+packages/
+  moshe-spec/              TypeScript types, schemas, validators (@moshe/spec)
+  moshe-core/              Engine, policy, analyzers, taint, chain risk (@moshe/core)
+  moshe-store-memory/      In-memory store (@moshe/store-memory)
+  moshe-store-file/        File-backed store (@moshe/store-file)
+  moshe-adapter-generic-tools/  GenericAdapter (@moshe/adapter-generic-tools)
+  moshe-adapter-openai/    OpenAI tool-call adapter (@moshe/adapter-openai)
+  moshe-adapter-anthropic/ Anthropic tool-use adapter (@moshe/adapter-anthropic)
+  moshe-sdk-ts/            TypeScript SDK entry point (@moshe/sdk)
+  moshe-sdk-python/        Python SDK (moshe on PyPI)
+examples/
+  minimal-ts/              End-to-end TypeScript example
+docs/
+  architecture/CHARTER.md  Package dependency rules, pipeline contract
+  spec/SCHEMAS.md          Schema reference
+  Versions.md              Changelog
+```
+
+---
+
+## Development
+
+**TypeScript workspace:**
+
+```bash
+npx pnpm@9.15.9 install
+npx pnpm@9.15.9 build
+npx pnpm@9.15.9 test
+node examples/minimal-ts/index.js
+```
+
+**Python package:**
+
+```bash
+cd packages/moshe-sdk-python
+python -m pip install -e ".[dev]"
+python -m pytest
+python -m mypy src
+```
+
+**Full check (build + test + example):**
+
+```bash
+npx pnpm@9.15.9 check
+```
+
+---
 
 ## Documentation
 
-- [Versions](./docs/Versions.md)
 - [Architecture Charter](./docs/architecture/CHARTER.md)
 - [Schema Reference](./docs/spec/SCHEMAS.md)
+- [Changelog](./docs/Versions.md)
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
+opening a pull request, and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
+
+## Security
+
+Please do not open public GitHub issues for security vulnerabilities. See
+[SECURITY.md](SECURITY.md) for the responsible disclosure process.
+
+---
+
+## License
+
+Apache License, Version 2.0. See [LICENSE](LICENSE) for the full text.
