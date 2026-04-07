@@ -7,6 +7,7 @@ import {
   validateDecisionEnvelope,
   validatePolicyConfig,
   type ActionEnvelope,
+  type ApprovalRequest,
   type DecisionEnvelope,
   type PolicyConfig,
   type TelemetryEvent
@@ -16,6 +17,8 @@ import type { EngineConfig, EngineContext, StageResult } from './interfaces.js';
 import { collectMatchedRules, decisionFromResults, evaluateStaticPolicy, validatePolicyRules } from './policy.js';
 import { analyzeChainRisk, buildChainRiskContext, updateChainRiskState } from './chain-risk.js';
 import { analyzeTaint, buildTaintContext, buildTaintStageResult, updateTaintState } from './taint-engine.js';
+import { ApprovalBlockedError } from './approval-provider.js';
+import { applyPresetOverlays } from './policy-presets.js';
 
 function fallbackActionId(envelope: unknown): string {
   if (typeof envelope === 'object' && envelope && 'actionId' in envelope) {
@@ -224,8 +227,6 @@ export class MosheEngine {
   }
 
   protected async enrich(envelope: ActionEnvelope, startedAt: number): Promise<EngineContext> {
-    const loadedPolicy = await this.config.policy.load();
-    await this.config.policy.validate(loadedPolicy);
     const effectivePolicy = await this.config.policy.getEffective();
     await this.config.policy.validate(effectivePolicy);
 
@@ -319,7 +320,24 @@ export class MosheEngine {
       });
     }
 
-    const approvalRequest = await this.config.approvalProvider.create(envelope, ctx);
+    let approvalRequest: ApprovalRequest | null;
+    try {
+      approvalRequest = await this.config.approvalProvider.create(envelope, ctx);
+    } catch (error) {
+      if (error instanceof ApprovalBlockedError) {
+        return buildStageResult({
+          stage: 'approval',
+          passed: false,
+          decision: 'BLOCK',
+          reasonCodes: [ReasonCode.APPROVAL_REPLAY_BLOCKED],
+          enrichments: {
+            summary: 'Action blocked: previously BLOCK-resolved within cooldown period.'
+          }
+        });
+      }
+
+      throw error;
+    }
     if (!approvalRequest) {
       return buildStageResult({
         stage: 'approval',
@@ -456,6 +474,11 @@ export class StaticPolicyProvider {
   }
 
   public async getEffective(): Promise<PolicyConfig> {
-    return structuredClone(this.policy);
+    const config = structuredClone(this.policy);
+    if (config.presetOverlays && config.presetOverlays.length > 0) {
+      return applyPresetOverlays(config, config.presetOverlays);
+    }
+
+    return config;
   }
 }

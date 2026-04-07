@@ -99,6 +99,9 @@ class ApprovalProvider(ABC):
     async def check(self, approval_id: str) -> str:
         raise NotImplementedError
 
+    async def resolve(self, approval_id: str, decision: str) -> None:
+        raise NotImplementedError
+
 
 class TelemetrySink(ABC):
     name: str

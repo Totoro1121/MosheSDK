@@ -118,6 +118,7 @@ export {
   CallbackDecisionProvider,
   CODING_AGENT_PRESET,
   CommandIntentAnalyzer,
+  ApprovalBlockedError,
   HttpDecisionProvider,
   FeedbackEmitter,
   FileAccessIntentAnalyzer,
@@ -129,6 +130,7 @@ export {
   PRESETS,
   PRESET_NAMES,
   resolveLineage,
+  ScrubbingTelemetrySink,
   validatePolicyRules
 } from '@moshe/core';
 export { OpenAIAdapter } from '@moshe/adapter-openai';

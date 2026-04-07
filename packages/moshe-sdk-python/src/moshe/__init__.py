@@ -35,7 +35,8 @@ from ._policy import (
 )
 from ._providers import CallbackDecisionProvider, DecisionCallback, HttpDecisionProvider, NoopDecisionProvider
 from ._store import ApprovalReplayEntry, ArtifactRecord, MemoryStore, SessionState
-from ._telemetry import FeedbackEmitter, FeedbackSubmission, MemoryTelemetrySink
+from ._approval import ApprovalBlockedError
+from ._telemetry import FeedbackEmitter, FeedbackSubmission, MemoryTelemetrySink, ScrubbingTelemetrySink
 from ._types import *
 
 
@@ -174,9 +175,11 @@ __all__ = [
     "FileAccessIntentAnalyzer",
     "OutboundClassificationAnalyzer",
     "InProcessApprovalProvider",
+    "ApprovalBlockedError",
     "ApprovalContext",
     "ApprovalResolution",
     "MemoryTelemetrySink",
+    "ScrubbingTelemetrySink",
     "FeedbackEmitter",
     "FeedbackSubmission",
     "NoopDecisionProvider",

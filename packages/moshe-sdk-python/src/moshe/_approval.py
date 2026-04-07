@@ -29,6 +29,12 @@ class ApprovalContext:
 ApprovalResolution = str
 
 
+class ApprovalBlockedError(Exception):
+    def __init__(self, fingerprint: str) -> None:
+        super().__init__("[MosheSDK] Action previously BLOCK-resolved; new request suppressed during cooldown.")
+        self.fingerprint = fingerprint
+
+
 @dataclass
 class PendingApproval:
     approval_id: str
@@ -40,7 +46,7 @@ class PendingApproval:
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _stable_sorted_args(value: Any) -> Any:
@@ -75,17 +81,26 @@ class InProcessApprovalProvider(ApprovalProvider):
         self,
         store: ApprovalStoreProtocol,
         ttl_ms: int = 300_000,
+        block_cooldown_ms: int | None = None,
         on_approval_required: Any | None = None,
     ) -> None:
         self._store = store
         self._ttl_ms = ttl_ms
+        self._block_cooldown_ms = block_cooldown_ms if block_cooldown_ms is not None else ttl_ms
         self._on_approval_required = on_approval_required
         self._pending_by_id: dict[str, PendingApproval] = {}
         self._pending_by_fingerprint: dict[str, str] = {}
+        self._blocked_fingerprints: dict[str, float] = {}
 
     async def create(self, envelope: ActionEnvelope, ctx: EngineContext) -> ApprovalRequest | None:
         self._cleanup_expired()
         fingerprint = _compute_fingerprint(envelope, ctx.session_id)
+        block_expiry = self._blocked_fingerprints.get(fingerprint)
+        if block_expiry is not None:
+            if block_expiry > datetime.now(timezone.utc).timestamp():
+                raise ApprovalBlockedError(fingerprint)
+            del self._blocked_fingerprints[fingerprint]
+
         replay = await ctx.session_store.get_approval_replay(fingerprint)
         if (
             replay is not None
@@ -108,10 +123,11 @@ class InProcessApprovalProvider(ApprovalProvider):
             previous = self._pending_by_id.get(previous_id)
             if previous is not None and previous.resolution == "BLOCK":
                 del self._pending_by_id[previous_id]
+                self._pending_by_fingerprint.pop(fingerprint, None)
 
         expires_at = (
             datetime.now(timezone.utc) + timedelta(milliseconds=self._ttl_ms)
-        ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        ).isoformat().replace("+00:00", "Z")
         request = ApprovalRequest(approval_id=str(uuid.uuid4()), expires_at=expires_at)
         pending = PendingApproval(
             approval_id=request.approval_id,
@@ -140,6 +156,11 @@ class InProcessApprovalProvider(ApprovalProvider):
         if pending is None or _is_expired(pending.expires_at):
             raise ValueError(f'Unknown or expired approval_id: "{approval_id}"')
         pending.resolution = decision
+        if decision == "BLOCK":
+            self._blocked_fingerprints[pending.fingerprint] = (
+                datetime.now(timezone.utc) + timedelta(milliseconds=self._block_cooldown_ms)
+            ).timestamp()
+            self._pending_by_fingerprint.pop(pending.fingerprint, None)
         if decision == "ALLOW_SESSION":
             from ._store import ApprovalReplayEntry
 
@@ -151,7 +172,7 @@ class InProcessApprovalProvider(ApprovalProvider):
                     resolved_at=_utc_now_iso(),
                     expires_at=(
                         datetime.now(timezone.utc) + timedelta(days=30)
-                    ).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                    ).isoformat().replace("+00:00", "Z"),
                 )
             )
 
@@ -163,7 +184,12 @@ class InProcessApprovalProvider(ApprovalProvider):
         return pending.resolution or "PENDING"
 
     def _cleanup_expired(self) -> None:
+        now = datetime.now(timezone.utc).timestamp()
+        for fingerprint, expiry in list(self._blocked_fingerprints.items()):
+            if expiry <= now:
+                del self._blocked_fingerprints[fingerprint]
+
         for approval_id, pending in list(self._pending_by_id.items()):
-            if pending.resolution is None and _is_expired(pending.expires_at):
+            if _is_expired(pending.expires_at):
                 del self._pending_by_id[approval_id]
                 self._pending_by_fingerprint.pop(pending.fingerprint, None)

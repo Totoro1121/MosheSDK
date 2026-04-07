@@ -171,11 +171,11 @@ def _evaluate_forbidden_path(envelope: ActionEnvelope, policy: PolicyConfig) -> 
 
 
 def _evaluate_forbidden_file(envelope: ActionEnvelope, policy: PolicyConfig) -> StageResult | None:
-    forbidden = {item.strip() for item in policy.forbidden_files or [] if item.strip()}
+    forbidden = {item.strip().lower() for item in policy.forbidden_files or [] if item.strip()}
     if not forbidden:
         return None
     for candidate in _collect_path_candidates(envelope):
-        file_name = _basename(candidate)
+        file_name = _basename(candidate).lower()
         if file_name in forbidden:
             return _rule_result(
                 decision="BLOCK",
@@ -215,16 +215,25 @@ def _evaluate_sensitive_files(envelope: ActionEnvelope, policy: PolicyConfig) ->
 
 
 def _evaluate_sensitive_env_keys(envelope: ActionEnvelope, policy: PolicyConfig) -> StageResult | None:
-    commands = _collect_command_candidates(envelope)
-    if not commands:
+    text_candidates = [
+        candidate
+        for candidate in [
+            envelope.arguments.command,
+            envelope.arguments.shell,
+            envelope.arguments.content,
+            envelope.arguments.body,
+        ]
+        if isinstance(candidate, str) and candidate.strip()
+    ]
+    if not text_candidates:
         return None
     for raw_key in policy.sensitive_env_keys or []:
         key = raw_key.strip().upper()
         if key == "":
             continue
         patterns = [f"${key}", f"%{key}%", f"printenv {key}", f"env {key}"]
-        for command in commands:
-            normalized = command.lower()
+        for candidate in text_candidates:
+            normalized = candidate.lower()
             if any(pattern.lower() in normalized for pattern in patterns):
                 return _rule_result(
                     decision="REVIEW",

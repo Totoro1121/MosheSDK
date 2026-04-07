@@ -104,3 +104,40 @@ expected behaviour, and the environment (Node version, Python version, OS).
 
 Open a GitHub issue using the feature request template. Describe the use case
 and proposed API before writing code.
+
+---
+
+## Release Process
+
+MosheSDK follows [Semantic Versioning](https://semver.org/).
+
+During the `0.x` series: minor version bumps (`0.1 → 0.2`) may include breaking
+API changes announced in [docs/Versions.md](docs/Versions.md). Patch bumps
+(`0.1.0 → 0.1.1`) are backwards-compatible fixes only. The API stabilises at
+`1.0.0`.
+
+### Steps to cut a release (maintainers only)
+
+1. Update `version` in every `packages/*/package.json` and in
+   `packages/moshe-sdk-python/pyproject.toml`.
+2. Add a release entry to [docs/Versions.md](docs/Versions.md).
+3. Commit: `git commit -m "chore: release vX.Y.Z"`
+4. Tag: `git tag vX.Y.Z`
+5. Push: `git push origin main --tags`
+
+### Publishing
+
+**TypeScript** — all eight `@moshe/*` packages:
+
+```bash
+pnpm -r publish --access public
+```
+
+**Python:**
+
+```bash
+cd packages/moshe-sdk-python
+python -m pip install build twine
+python -m build
+twine upload dist/*
+```

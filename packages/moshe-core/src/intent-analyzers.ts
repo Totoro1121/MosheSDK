@@ -57,6 +57,8 @@ function collectOutboundTargets(envelope: ActionEnvelope): string[] {
   return [...targets];
 }
 
+const INTERPRETER_PIPE_PATTERN = /\|\s*(?:\/(?:usr\/(?:local\/)?)?bin\/)?(?:bash|sh|python3?|node|perl|ruby)\b/;
+
 export class CommandIntentAnalyzer implements Analyzer {
   public readonly name = 'command_intent';
 
@@ -69,11 +71,7 @@ export class CommandIntentAnalyzer implements Analyzer {
     for (const candidate of commands) {
       const normalized = candidate.toLowerCase();
       const decodesBase64 = normalized.includes('base64 -d') || normalized.includes('base64 --decode');
-      const pipesToInterpreter = normalized.includes('| bash')
-        || normalized.includes('| sh')
-        || normalized.includes('| python3')
-        || normalized.includes('| python')
-        || normalized.includes('| node');
+      const pipesToInterpreter = INTERPRETER_PIPE_PATTERN.test(normalized);
 
       if (decodesBase64 && pipesToInterpreter) {
         return flag(this.name, {
@@ -87,7 +85,7 @@ export class CommandIntentAnalyzer implements Analyzer {
 
     for (const candidate of commands) {
       const normalized = candidate.toLowerCase();
-      const pipeToInterpreter = /\|\s*(bash|sh|python3?|node|perl|ruby)\b/.test(normalized);
+      const pipeToInterpreter = INTERPRETER_PIPE_PATTERN.test(normalized);
       const decodesBase64 = normalized.includes('base64 -d') || normalized.includes('base64 --decode');
 
       if (pipeToInterpreter && !decodesBase64) {

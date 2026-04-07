@@ -7,7 +7,7 @@ import { Moshe } from '@moshe/sdk';
 import type { ActionEnvelope, ApprovalRequest, PolicyConfig } from '@moshe/spec';
 import { MemoryStore } from '@moshe/store-memory';
 
-import { InProcessApprovalProvider } from '../src/approval-provider.js';
+import { ApprovalBlockedError, InProcessApprovalProvider } from '../src/approval-provider.js';
 import type { EngineContext } from '../src/interfaces.js';
 import type { ArtifactStore, SessionStore } from '../src/interfaces.js';
 
@@ -70,9 +70,9 @@ describe('InProcessApprovalProvider', () => {
     expect(third).not.toBeNull();
   });
 
-  it('does not permanently suppress future requests after BLOCK resolution', async () => {
+  it('suppresses future requests during BLOCK cooldown and allows again after expiry', async () => {
     const store = new MemoryStore();
-    const provider = new InProcessApprovalProvider({ store });
+    const provider = new InProcessApprovalProvider({ store, ttlMs: 20 });
     const ctx = makeCtx('blocked-once', store);
     const envelope = await makeEnvelope();
 
@@ -80,11 +80,15 @@ describe('InProcessApprovalProvider', () => {
     await provider.resolve((first as ApprovalRequest).approvalId, 'BLOCK');
 
     await expect(provider.check((first as ApprovalRequest).approvalId)).resolves.toBe('BLOCK');
+    await expect(provider.create(envelope, ctx)).rejects.toBeInstanceOf(ApprovalBlockedError);
+
+    await delay(25);
+
     const second = await provider.create(envelope, ctx);
     expect(second).not.toBeNull();
   });
 
-  it('cleans up orphaned BLOCK entries before creating a new approval for the same fingerprint', async () => {
+  it('cleans up pendingByFingerprint on BLOCK resolution', async () => {
     const store = new MemoryStore();
     const provider = new InProcessApprovalProvider({ store });
     const ctx = makeCtx('block-cleanup', store);
@@ -93,12 +97,31 @@ describe('InProcessApprovalProvider', () => {
     const first = await provider.create(envelope, ctx);
     await provider.resolve((first as ApprovalRequest).approvalId, 'BLOCK');
 
-    const second = await provider.create(envelope, ctx);
-    const internals = provider as unknown as { pendingById: Map<string, unknown> };
+    const internals = provider as unknown as {
+      pendingByFingerprint: Map<string, string>;
+    };
 
+    expect(internals.pendingByFingerprint.size).toBe(0);
+  });
+
+  it('cleans up expired resolved approvals', async () => {
+    const store = new MemoryStore();
+    const provider = new InProcessApprovalProvider({ store, ttlMs: 1 });
+    const ctx = makeCtx('resolved-expiry', store);
+    const envelope = await makeEnvelope();
+
+    const first = await provider.create(envelope, ctx);
+    await provider.resolve((first as ApprovalRequest).approvalId, 'ALLOW_ONCE');
+
+    await delay(10);
+    const second = await provider.create(envelope, ctx);
     expect(second).not.toBeNull();
+    expect((second as ApprovalRequest).approvalId).not.toBe((first as ApprovalRequest).approvalId);
+
+    const internals = provider as unknown as {
+      pendingById: Map<string, unknown>;
+    };
     expect(internals.pendingById.size).toBe(1);
-    await expect(provider.check((first as ApprovalRequest).approvalId)).rejects.toThrow((first as ApprovalRequest).approvalId);
   });
 
   it('keeps different fingerprints isolated', async () => {

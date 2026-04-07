@@ -7,6 +7,7 @@ from typing import Any
 
 from ._interfaces import Analyzer, ApprovalProvider, DecisionProvider, EngineContext, PolicyProvider, StageResult, TelemetrySink
 from ._policy import collect_matched_rules, decision_from_results, evaluate_static_policy
+from ._approval import ApprovalBlockedError
 from ._taint import (
     analyze_chain_risk,
     analyze_taint,
@@ -170,11 +171,24 @@ class MosheEngine:
             raise ValueError("ActionEnvelope validation failed: action_id and session_id are required")
         if envelope.framework.strip() == "" or envelope.tool_name.strip() == "":
             raise ValueError("ActionEnvelope validation failed: framework and tool_name are required")
+        valid_action_types = {
+            "tool_call",
+            "command_exec",
+            "file_read",
+            "file_write",
+            "outbound_request",
+            "message_send",
+            "unknown",
+        }
+        if envelope.action_type not in valid_action_types:
+            raise ValueError(
+                f"ActionEnvelope validation failed: invalid action_type '{envelope.action_type}'"
+            )
+        if not envelope.operation.strip():
+            raise ValueError("ActionEnvelope validation failed: operation is required")
         return envelope
 
     async def enrich(self, envelope: ActionEnvelope, started_at: float) -> EngineContext:
-        loaded_policy = await self.config.policy.load()
-        await self.config.policy.validate(loaded_policy)
         effective_policy = await self.config.policy.get_effective()
         await self.config.policy.validate(effective_policy)
 
@@ -242,7 +256,18 @@ class MosheEngine:
                 },
             )
 
-        approval_request = await self.config.approval_provider.create(envelope, ctx)
+        try:
+            approval_request = await self.config.approval_provider.create(envelope, ctx)
+        except ApprovalBlockedError:
+            return StageResult(
+                stage="approval",
+                passed=False,
+                decision="BLOCK",
+                reason_codes=[ReasonCode.APPROVAL_REPLAY_BLOCKED],
+                enrichments={
+                    "summary": "Action blocked: previously BLOCK-resolved within cooldown period.",
+                },
+            )
         if approval_request is None:
             return StageResult(
                 stage="approval",

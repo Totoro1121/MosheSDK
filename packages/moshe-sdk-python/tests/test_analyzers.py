@@ -52,6 +52,33 @@ async def test_command_intent_analyzer(command: str, decision: str, reason_code:
 
 
 @pytest.mark.asyncio
+async def test_command_intent_blocks_base64_pipe_to_perl() -> None:
+    result = await CommandIntentAnalyzer().analyze(
+        env(action_type="command_exec", arguments=ToolArguments(command="echo aaa | base64 -d | perl")),
+        context(),
+    )
+    assert result.decision == "BLOCK"
+
+
+@pytest.mark.asyncio
+async def test_command_intent_blocks_base64_pipe_to_full_path_bash() -> None:
+    result = await CommandIntentAnalyzer().analyze(
+        env(action_type="command_exec", arguments=ToolArguments(command="echo aaa | base64 -d | /bin/bash")),
+        context(),
+    )
+    assert result.decision == "BLOCK"
+
+
+@pytest.mark.asyncio
+async def test_command_intent_reviews_full_path_python_pipe() -> None:
+    result = await CommandIntentAnalyzer().analyze(
+        env(action_type="command_exec", arguments=ToolArguments(command="cat payload | /usr/bin/python3")),
+        context(),
+    )
+    assert result.decision == "REVIEW"
+
+
+@pytest.mark.asyncio
 async def test_file_access_intent_analyzer_allow_small_ref_count() -> None:
     result = await FileAccessIntentAnalyzer().analyze(
         env(action_type="file_read", referenced_paths=["a", "b"]),
@@ -86,3 +113,12 @@ async def test_outbound_classification_analyzer_flags_risky_targets(target: str)
     )
     assert result.decision == "REVIEW"
     assert result.reason_codes == [ReasonCode.OUTBOUND_CLASSIFICATION_SUSPICIOUS]
+
+
+@pytest.mark.asyncio
+async def test_outbound_classification_flags_127_loopback_range() -> None:
+    result = await OutboundClassificationAnalyzer().analyze(
+        env(action_type="outbound_request", arguments=ToolArguments(url="https://127.1.2.3/data"), outbound_targets=["https://127.1.2.3/data"]),
+        context(),
+    )
+    assert result.decision == "REVIEW"

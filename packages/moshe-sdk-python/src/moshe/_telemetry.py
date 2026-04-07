@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from dataclasses import replace
 
 from ._interfaces import TelemetrySink
 from ._types import Decision, FeedbackVerdict, TelemetryEvent, TelemetryEventType, clone_dataclass
@@ -35,6 +36,16 @@ class MemoryTelemetrySink(TelemetrySink):
 
     def clear(self) -> None:
         self._events.clear()
+
+
+class ScrubbingTelemetrySink(TelemetrySink):
+    def __init__(self, inner: TelemetrySink) -> None:
+        self.name = f"scrubbing({inner.name})"
+        self._inner = inner
+
+    async def emit(self, event: TelemetryEvent) -> None:
+        scrubbed = replace(event, debug=None)
+        await self._inner.emit(scrubbed)
 
 
 @dataclass(frozen=True)

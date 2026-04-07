@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from moshe import FeedbackEmitter, FeedbackSubmission, MemoryTelemetrySink, TelemetryEvent
+from moshe import FeedbackEmitter, FeedbackSubmission, MemoryTelemetrySink, ScrubbingTelemetrySink, TelemetryEvent
 
 
 @pytest.mark.asyncio
@@ -57,3 +57,19 @@ async def test_feedback_emitter_emits_feedback_event() -> None:
         "expected_decision": "ALLOW",
         "note": "looks good",
     }
+
+
+@pytest.mark.asyncio
+async def test_scrubbing_telemetry_sink_removes_debug() -> None:
+    inner = MemoryTelemetrySink()
+    sink = ScrubbingTelemetrySink(inner)
+    await sink.emit(
+        TelemetryEvent(
+            event_id="e1",
+            event_type="DECISION_MADE",
+            action_id="a1",
+            session_id="s1",
+            debug={"secret": "value"},
+        )
+    )
+    assert inner.get_events()[0].debug is None

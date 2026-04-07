@@ -44,6 +44,7 @@ export interface DecisionProvider {
 export interface ApprovalProvider {
   create(envelope: ActionEnvelope, ctx: EngineContext): Promise<ApprovalRequest | null>;
   check(approvalId: string): Promise<'ALLOW_ONCE' | 'ALLOW_SESSION' | 'BLOCK' | 'PENDING'>;
+  resolve?(approvalId: string, decision: 'ALLOW_ONCE' | 'ALLOW_SESSION' | 'BLOCK'): Promise<void>;
 }
 
 export interface TelemetrySink {

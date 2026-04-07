@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from urllib.parse import urlparse
+
+_LOOPBACK_RE = re.compile(r"^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
 
 @dataclass(frozen=True)
@@ -29,13 +32,13 @@ def domain_matches_pattern(hostname: str, pattern: str) -> bool:
     normalized_pattern = pattern.lower()
     if normalized_pattern.startswith("*."):
         suffix = normalized_pattern[2:]
-        return normalized_host.endswith(f".{suffix}")
+        return normalized_host == suffix or normalized_host.endswith(f".{suffix}")
     return normalized_host == normalized_pattern or normalized_host.endswith(f".{normalized_pattern}")
 
 
 def is_local_network_host(hostname: str) -> bool:
     normalized = hostname.lower()
-    return normalized in {"localhost", "0.0.0.0", "::1", "[::1]"}
+    return normalized in {"localhost", "0.0.0.0", "::1", "[::1]"} or bool(_LOOPBACK_RE.match(normalized))
 
 
 def _parse_pattern_target(pattern: str) -> tuple[str, str, str] | None:
@@ -73,12 +76,18 @@ def matches_outbound_pattern(target: str, pattern: str) -> bool:
 
     pattern_has_scheme = normalized_pattern.startswith("http://") or normalized_pattern.startswith("https://")
     scheme, authority, path = parsed_pattern
-    hostname = authority.split(":", 1)[0]
+    host_parts = authority.split(":", 1)
+    hostname = host_parts[0]
+    port = host_parts[1] if len(host_parts) > 1 else ""
 
     if pattern_has_scheme and parsed_target.scheme != scheme:
         return False
 
     if not domain_matches_pattern(parsed_target.hostname, hostname):
+        return False
+
+    parsed_target_port = urlparse(target).port
+    if port and str(parsed_target_port or "") != port:
         return False
 
     if path and path != "/" and not parsed_target.path.startswith(path):

@@ -78,6 +78,7 @@ export class HttpDecisionProvider implements DecisionProvider {
   private readonly timeoutMs: number;
   private readonly headers: Record<string, string>;
   private readonly onError: 'null' | 'throw';
+  private readonly warnedOnInsecureUrl: boolean;
 
   public constructor(options: HttpDecisionProviderOptions) {
     this.name = options.name ?? 'http';
@@ -85,6 +86,11 @@ export class HttpDecisionProvider implements DecisionProvider {
     this.timeoutMs = options.timeoutMs ?? 5000;
     this.headers = options.headers ?? {};
     this.onError = options.onError ?? 'null';
+    this.warnedOnInsecureUrl = !this.url.startsWith('https://');
+
+    if (this.warnedOnInsecureUrl) {
+      console.warn('[MosheSDK] HttpDecisionProvider: URL is not HTTPS. Sensitive metadata may be transmitted in cleartext.');
+    }
   }
 
   public async evaluate(
@@ -92,13 +98,24 @@ export class HttpDecisionProvider implements DecisionProvider {
     _ctx: EngineContext
   ): Promise<StageResult | null> {
     try {
+      const sanitizedArguments = { ...envelope.arguments };
+      delete (sanitizedArguments as Partial<typeof sanitizedArguments>).content;
+      delete (sanitizedArguments as Partial<typeof sanitizedArguments>).body;
+      delete (sanitizedArguments as Partial<typeof sanitizedArguments>).headers;
+      delete (sanitizedArguments as Partial<typeof sanitizedArguments>).params;
+
+      const sanitizedEnvelope = {
+        ...envelope,
+        arguments: sanitizedArguments
+      };
+
       const response = await globalThis.fetch(this.url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...this.headers
         },
-        body: JSON.stringify({ envelope, sessionId: envelope.sessionId }),
+        body: JSON.stringify({ envelope: sanitizedEnvelope, sessionId: envelope.sessionId }),
         signal: AbortSignal.timeout(this.timeoutMs)
       });
 

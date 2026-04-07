@@ -35,6 +35,19 @@ export class MemoryTelemetrySink implements TelemetrySink {
   }
 }
 
+export class ScrubbingTelemetrySink implements TelemetrySink {
+  public readonly name: string;
+
+  public constructor(private readonly inner: TelemetrySink) {
+    this.name = `scrubbing(${inner.name})`;
+  }
+
+  public async emit(event: TelemetryEvent): Promise<void> {
+    const { debug: _debug, ...scrubbed } = event;
+    await this.inner.emit(scrubbed as TelemetryEvent);
+  }
+}
+
 export interface FeedbackSubmission {
   actionId: string;
   sessionId: string;

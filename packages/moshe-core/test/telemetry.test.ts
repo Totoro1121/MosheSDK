@@ -6,7 +6,7 @@ import type { TelemetryEvent } from '@moshe/spec';
 import { MemoryStore, Moshe } from '@moshe/sdk';
 
 import type { FeedbackSubmission } from '../src/telemetry.js';
-import { FeedbackEmitter, MemoryTelemetrySink } from '../src/telemetry.js';
+import { FeedbackEmitter, MemoryTelemetrySink, ScrubbingTelemetrySink } from '../src/telemetry.js';
 
 function event(overrides: Partial<TelemetryEvent> = {}): TelemetryEvent {
   return {
@@ -175,6 +175,20 @@ describe('FeedbackEmitter', () => {
 
     const events = sink.getEventsByType('FEEDBACK');
     expect(events[0]?.eventId).not.toBe(events[1]?.eventId);
+  });
+});
+
+describe('ScrubbingTelemetrySink', () => {
+  it('removes debug before forwarding', async () => {
+    const inner = new MemoryTelemetrySink();
+    const sink = new ScrubbingTelemetrySink(inner);
+
+    await sink.emit(event({
+      eventType: 'DECISION_MADE',
+      debug: { secret: 'value' }
+    }));
+
+    expect(inner.getEvents()[0]?.debug).toBeUndefined();
   });
 });
 

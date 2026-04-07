@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { MosheEngine, StaticPolicyProvider, type ActionEnvelope, type Analyzer, type DecisionEnvelope, type StageResult, type TelemetrySink } from '@moshe/core';
+import { InProcessApprovalProvider, MosheEngine, StaticPolicyProvider, type ActionEnvelope, type Analyzer, type DecisionEnvelope, type StageResult, type TelemetrySink } from '@moshe/core';
 import { ReasonCode } from '@moshe/spec';
 import { MemoryStore } from '@moshe/store-memory';
 
@@ -255,5 +255,37 @@ describe('moshe-core engine', () => {
 
     expect(decision.decision).toBe('ALLOW');
     expect(decision.reasonCodes).toContain(ReasonCode.INTENT_ANALYZER_STUB);
+  });
+
+  it('returns BLOCK with APPROVAL_REPLAY_BLOCKED when prior BLOCK cooldown is active', async () => {
+    const store = new MemoryStore();
+    const provider = new InProcessApprovalProvider({ store });
+    const engine = new MosheEngine({
+      policy: new StaticPolicyProvider({ version: '0.1.0', sensitiveFiles: ['.env'] }),
+      sessionStore: store,
+      artifactStore: store,
+      approvalProvider: provider,
+      onError: 'BLOCK',
+      onUnhandledReview: 'BLOCK'
+    });
+
+    const action = actionFixture({
+      actionType: 'file_read',
+      operation: 'read',
+      toolName: 'read_file',
+      arguments: { path: '.env' }
+    });
+
+    const first = await engine.evaluate(action);
+    expect(first.decision).toBe('REVIEW');
+    await provider.resolve(first.approvalRequest?.approvalId as string, 'BLOCK');
+
+    const second = await engine.evaluate({
+      ...action,
+      actionId: randomUUID()
+    });
+
+    expect(second.decision).toBe('BLOCK');
+    expect(second.reasonCodes).toContain(ReasonCode.APPROVAL_REPLAY_BLOCKED);
   });
 });

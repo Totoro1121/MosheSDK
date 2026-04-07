@@ -188,13 +188,13 @@ export function evaluateForbiddenPath(envelope: ActionEnvelope, policy: PolicyCo
 }
 
 export function evaluateForbiddenFile(envelope: ActionEnvelope, policy: PolicyConfig): StageResult | null {
-  const forbiddenFiles = new Set((policy.forbiddenFiles ?? []).map((value) => value.trim()).filter(Boolean));
+  const forbiddenFiles = new Set((policy.forbiddenFiles ?? []).map((value) => value.trim().toLowerCase()).filter(Boolean));
   if (forbiddenFiles.size === 0) {
     return null;
   }
 
   for (const candidate of collectPathCandidates(envelope)) {
-    const fileName = basename(candidate);
+    const fileName = basename(candidate).toLowerCase();
     if (!forbiddenFiles.has(fileName)) {
       continue;
     }
@@ -246,8 +246,14 @@ export function evaluateSensitiveFiles(envelope: ActionEnvelope, policy: PolicyC
 }
 
 export function evaluateSensitiveEnvKeys(envelope: ActionEnvelope, policy: PolicyConfig): StageResult | null {
-  const commands = collectCommandCandidates(envelope);
-  if (commands.length === 0) {
+  const textCandidates = [
+    envelope.arguments.command,
+    envelope.arguments.shell,
+    envelope.arguments.content,
+    envelope.arguments.body
+  ].filter((value): value is string => typeof value === 'string' && value.trim() !== '');
+
+  if (textCandidates.length === 0) {
     return null;
   }
 
@@ -264,9 +270,9 @@ export function evaluateSensitiveEnvKeys(envelope: ActionEnvelope, policy: Polic
       `env ${key}`
     ].map((value) => value.toLowerCase());
 
-    for (const command of commands) {
-      const normalizedCommand = command.toLowerCase();
-      if (!patterns.some((pattern) => normalizedCommand.includes(pattern))) {
+    for (const candidate of textCandidates) {
+      const normalizedCandidate = candidate.toLowerCase();
+      if (!patterns.some((pattern) => normalizedCandidate.includes(pattern))) {
         continue;
       }
 

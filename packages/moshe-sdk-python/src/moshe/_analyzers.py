@@ -57,7 +57,7 @@ class CommandIntentAnalyzer(Analyzer):
         for candidate in commands:
             normalized = candidate.lower()
             decodes_base64 = "base64 -d" in normalized or "base64 --decode" in normalized
-            pipes_to_interpreter = any(token in normalized for token in ["| bash", "| sh", "| python3", "| python", "| node"])
+            pipes_to_interpreter = INTERPRETER_PIPE_PATTERN.search(normalized) is not None
             if decodes_base64 and pipes_to_interpreter:
                 return _flag(
                     self.name,
@@ -69,7 +69,7 @@ class CommandIntentAnalyzer(Analyzer):
 
         for candidate in commands:
             normalized = candidate.lower()
-            pipe_to_interpreter = re.search(r"\|\s*(bash|sh|python3?|node|perl|ruby)\b", normalized) is not None
+            pipe_to_interpreter = INTERPRETER_PIPE_PATTERN.search(normalized) is not None
             decodes_base64 = "base64 -d" in normalized or "base64 --decode" in normalized
             if pipe_to_interpreter and not decodes_base64:
                 return _flag(
@@ -183,3 +183,6 @@ class OutboundClassificationAnalyzer(Analyzer):
                     summary="Outbound request targets a local network address.",
                 )
         return _pass(self.name)
+INTERPRETER_PIPE_PATTERN = re.compile(
+    r"\|\s*(?:/(?:usr/(?:local/)?)?bin/)?(?:bash|sh|python3?|node|perl|ruby)\b"
+)

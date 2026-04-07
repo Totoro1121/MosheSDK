@@ -206,6 +206,60 @@ describe('policy evaluators', () => {
     expect(missing).toBeNull();
   });
 
+  it('evaluateSensitiveEnvKeys scans content and body text fields', () => {
+    const contentMatch = evaluateSensitiveEnvKeys(
+      actionWith({
+        actionType: 'file_write',
+        operation: 'write',
+        toolName: 'write_file',
+        arguments: { content: 'Value is $AWS_SECRET_ACCESS_KEY' }
+      }),
+      {
+        version: '0.1.0',
+        sensitiveEnvKeys: ['AWS_SECRET_ACCESS_KEY']
+      }
+    );
+    expect(contentMatch?.decision).toBe('REVIEW');
+
+    const bodyMatch = evaluateSensitiveEnvKeys(
+      actionWith({
+        actionType: 'message_send',
+        operation: 'send',
+        toolName: 'send_email',
+        arguments: { body: 'Value is $AWS_SECRET_ACCESS_KEY' }
+      }),
+      {
+        version: '0.1.0',
+        sensitiveEnvKeys: ['AWS_SECRET_ACCESS_KEY']
+      }
+    );
+    expect(bodyMatch?.decision).toBe('REVIEW');
+  });
+
+  it('evaluateForbiddenFile matches case-insensitively', async () => {
+    const upper = await evaluateStaticPolicy(
+      actionWith({
+        actionType: 'file_read',
+        operation: 'read',
+        toolName: 'read_file',
+        arguments: { path: '.ENV' }
+      }),
+      ctx({ version: '0.1.0', forbiddenFiles: ['.env'] })
+    );
+    expect(upper.decision).toBe('BLOCK');
+
+    const mixed = await evaluateStaticPolicy(
+      actionWith({
+        actionType: 'file_read',
+        operation: 'read',
+        toolName: 'read_file',
+        arguments: { path: '.Env' }
+      }),
+      ctx({ version: '0.1.0', forbiddenFiles: ['.env'] })
+    );
+    expect(mixed.decision).toBe('BLOCK');
+  });
+
   it('evaluateOutboundRules blocks, allows, and ignores unmatched URLs', async () => {
     const blockedEnvelope = await loadFixture<ActionEnvelope>('actions/block-outbound-rule.json');
     const blocked = evaluateOutboundRules(blockedEnvelope, {
@@ -540,5 +594,16 @@ describe('FilePolicyProvider', () => {
     });
 
     await expect(provider.validate(await provider.load())).rejects.toThrow(/invalid regex/i);
+  });
+
+  it('StaticPolicyProvider applies preset overlays in getEffective()', async () => {
+    const provider = new StaticPolicyProvider({
+      version: '0.1.0',
+      presetOverlays: ['coding-agent']
+    });
+
+    await expect(provider.getEffective()).resolves.toMatchObject({
+      forbiddenCommands: expect.arrayContaining(CODING_AGENT_PRESET.forbiddenCommands ?? [])
+    });
   });
 });

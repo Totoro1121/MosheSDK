@@ -136,6 +136,5 @@ export class FileStore implements SessionStore, ArtifactStore {
     const data = JSON.stringify(this.state, null, 2);
     await fs.writeFile(tmpPath, data, 'utf8');
     await fs.rename(tmpPath, this.filePath);
-    await fs.rm(tmpPath, { force: true });
   }
 }

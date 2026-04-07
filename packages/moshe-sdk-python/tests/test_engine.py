@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from moshe import (
+    ApprovalBlockedError,
     CallbackDecisionProvider,
     FeedbackSubmission,
     InProcessApprovalProvider,
@@ -13,7 +14,10 @@ from moshe import (
     ReasonCode,
     ToolArguments,
 )
+from moshe._engine import EngineConfig, MosheEngine
+from moshe._policy import StaticPolicyProvider
 from moshe._interfaces import StageResult
+from moshe._types import ActionEnvelope
 
 
 @pytest.mark.asyncio
@@ -136,3 +140,106 @@ async def test_engine_error_path_returns_engine_error_reason_code() -> None:
     sdk = Moshe(policy=PolicyConfig())
     decision = await sdk.evaluate(session_id="", framework="test", action_type="tool_call", operation="call", tool_name="search")
     assert decision.reason_codes == [ReasonCode.ENGINE_ERROR]
+
+
+@pytest.mark.asyncio
+async def test_engine_invalid_action_type_returns_engine_error_reason_code() -> None:
+    sdk = Moshe(policy=PolicyConfig())
+    decision = await sdk.evaluate(
+        session_id="s1",
+        framework="test",
+        action_type="bad_type",  # type: ignore[arg-type]
+        operation="call",
+        tool_name="search",
+    )
+    assert decision.reason_codes == [ReasonCode.ENGINE_ERROR]
+
+
+@pytest.mark.asyncio
+async def test_python_normalize_rejects_invalid_action_type() -> None:
+    store = MemoryStore()
+    engine = MosheEngine(
+        EngineConfig(
+            policy=StaticPolicyProvider(PolicyConfig()),
+            session_store=store,
+            artifact_store=store,
+        )
+    )
+    with pytest.raises(ValueError, match="invalid action_type"):
+        await engine.normalize(
+            ActionEnvelope(
+                action_id="a1",
+                session_id="s1",
+                timestamp="2025-01-01T00:00:00Z",
+                framework="test",
+                action_type="bad_type",  # type: ignore[arg-type]
+                operation="call",
+                tool_name="search",
+                arguments=ToolArguments(),
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_python_normalize_rejects_empty_operation() -> None:
+    store = MemoryStore()
+    engine = MosheEngine(
+        EngineConfig(
+            policy=StaticPolicyProvider(PolicyConfig()),
+            session_store=store,
+            artifact_store=store,
+        )
+    )
+    with pytest.raises(ValueError, match="operation is required"):
+        await engine.normalize(
+            ActionEnvelope(
+                action_id="a1",
+                session_id="s1",
+                timestamp="2025-01-01T00:00:00Z",
+                framework="test",
+                action_type="tool_call",
+                operation="",
+                tool_name="search",
+                arguments=ToolArguments(),
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_engine_blocks_when_approval_blocked_error_is_raised() -> None:
+    store = MemoryStore()
+    sdk = Moshe(
+        policy=PolicyConfig(sensitive_files=[".env"]),
+        store=store,
+        approval_provider=InProcessApprovalProvider(store),
+    )
+    first = await sdk.evaluate(
+        session_id="s1",
+        framework="test",
+        action_type="file_read",
+        operation="read",
+        tool_name="read_file",
+        arguments=ToolArguments(path=".env"),
+    )
+    assert first.approval_request is not None
+    await sdk._engine.config.approval_provider.resolve(first.approval_request.approval_id, "BLOCK")  # type: ignore[union-attr]
+
+    second = await sdk.evaluate(
+        session_id="s1",
+        framework="test",
+        action_type="file_read",
+        operation="read",
+        tool_name="read_file",
+        arguments=ToolArguments(path=".env"),
+    )
+    assert second.decision == "BLOCK"
+    assert ReasonCode.APPROVAL_REPLAY_BLOCKED in second.reason_codes
+
+
+def test_python_exports_include_new_security_symbols() -> None:
+    from moshe import ApprovalBlockedError as ExportedApprovalBlockedError
+    from moshe import ScrubbingTelemetrySink
+
+    sink = ScrubbingTelemetrySink(MemoryTelemetrySink())
+    assert isinstance(ExportedApprovalBlockedError("fp"), ApprovalBlockedError)
+    assert sink.name == "scrubbing(memory)"

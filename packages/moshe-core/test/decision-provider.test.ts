@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CallbackDecisionProvider,
@@ -85,9 +85,11 @@ function mockResponse(init: {
 }
 
 const originalFetch = globalThis.fetch;
+const originalWarn = console.warn;
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  console.warn = originalWarn;
 });
 
 describe('NoopDecisionProvider', () => {
@@ -158,6 +160,10 @@ describe('CallbackDecisionProvider', () => {
 });
 
 describe('HttpDecisionProvider', () => {
+  beforeEach(() => {
+    console.warn = vi.fn();
+  });
+
   it('returns null on network error by default', async () => {
     globalThis.fetch = vi.fn(async () => {
       throw new Error('network down');
@@ -368,6 +374,44 @@ describe('HttpDecisionProvider', () => {
       envelope,
       sessionId: envelope.sessionId
     });
+  });
+
+  it('strips sensitive argument fields from the POST body', async () => {
+    const fetchMock = vi.fn(async () => mockResponse({
+      ok: true,
+      status: 200,
+      body: { passed: true }
+    }));
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const provider = new HttpDecisionProvider({ url: 'https://example.test/review' });
+    const envelope = actionFixture({
+      arguments: {
+        command: 'echo hello',
+        content: 'secret body',
+        body: 'message body',
+        headers: { Authorization: 'Bearer token' },
+        params: { secret: 'value' }
+      }
+    });
+    await provider.evaluate(envelope, makeCtx());
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(options.body))).toEqual({
+      envelope: {
+        ...envelope,
+        arguments: {
+          command: 'echo hello'
+        }
+      },
+      sessionId: envelope.sessionId
+    });
+  });
+
+  it('warns once when configured with a non-HTTPS URL', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    new HttpDecisionProvider({ url: 'http://example.test/review' });
+    expect(warn).toHaveBeenCalledOnce();
   });
 
   it('always returns decision_provider as the stage', async () => {

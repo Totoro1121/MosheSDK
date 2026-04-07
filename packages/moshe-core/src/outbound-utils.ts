@@ -12,10 +12,26 @@ interface ParsedPattern extends ParsedTarget {
 export function parseOutboundTarget(target: string): ParsedTarget | null {
   try {
     const url = new URL(target);
+    const authority = target.slice(target.indexOf('//') + 2).split(/[/?#]/, 1)[0] ?? '';
+    const withoutCredentials = authority.includes('@') ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
+    let explicitPort = url.port;
+
+    if (withoutCredentials.startsWith('[')) {
+      const closingBracket = withoutCredentials.indexOf(']');
+      if (closingBracket >= 0 && withoutCredentials[closingBracket + 1] === ':') {
+        explicitPort = withoutCredentials.slice(closingBracket + 2);
+      }
+    } else {
+      const colonIndex = withoutCredentials.lastIndexOf(':');
+      if (colonIndex > -1 && withoutCredentials.indexOf(':') === colonIndex) {
+        explicitPort = withoutCredentials.slice(colonIndex + 1);
+      }
+    }
+
     return {
       scheme: url.protocol.replace(':', ''),
       hostname: url.hostname.toLowerCase(),
-      port: url.port,
+      port: explicitPort,
       pathname: url.pathname || '/'
     };
   } catch {
@@ -26,7 +42,7 @@ export function parseOutboundTarget(target: string): ParsedTarget | null {
 export function domainMatchesPattern(hostname: string, pattern: string): boolean {
   if (pattern.startsWith('*.')) {
     const suffix = pattern.slice(2);
-    return hostname.endsWith(`.${suffix}`);
+    return hostname === suffix || hostname.endsWith(`.${suffix}`);
   }
 
   return hostname === pattern || hostname.endsWith(`.${pattern}`);
@@ -37,7 +53,8 @@ export function isLocalNetworkHost(hostname: string): boolean {
   return h === 'localhost'
     || h === '0.0.0.0'
     || h === '::1'
-    || h === '[::1]';
+    || h === '[::1]'
+    || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h);
 }
 
 function parsePatternTarget(pattern: string): ParsedPattern | null {
@@ -92,6 +109,10 @@ export function matchesOutboundPattern(target: string, pattern: string): boolean
   }
 
   if (!domainMatchesPattern(parsedTarget.hostname, parsedPattern.hostname)) {
+    return false;
+  }
+
+  if (parsedPattern.port !== '' && parsedTarget.port !== parsedPattern.port) {
     return false;
   }
 

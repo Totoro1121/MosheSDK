@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import urllib.request
+import warnings
 from inspect import isawaitable
 from typing import Any, Callable, cast
 
@@ -49,6 +50,11 @@ class HttpDecisionProvider(DecisionProvider):
         self._timeout_ms = timeout_ms
         self._headers = headers or {}
         self._on_error = on_error
+        if not self.url.startswith("https://"):
+            warnings.warn(
+                "[MosheSDK] HttpDecisionProvider: URL is not HTTPS. Sensitive metadata may be transmitted in cleartext.",
+                stacklevel=2,
+            )
 
     async def evaluate(self, envelope: ActionEnvelope, _ctx: EngineContext) -> StageResult | None:
         try:
@@ -57,8 +63,14 @@ class HttpDecisionProvider(DecisionProvider):
             return self._handle_error(error)
 
     def _sync_fetch(self, envelope: ActionEnvelope) -> StageResult | None:
+        envelope_payload = dataclass_to_camel_dict(envelope)
+        if isinstance(envelope_payload, dict):
+            arguments = envelope_payload.get("arguments")
+            if isinstance(arguments, dict):
+                for key in ("content", "body", "headers", "params"):
+                    arguments.pop(key, None)
         payload = json.dumps(
-            {"envelope": dataclass_to_camel_dict(envelope), "sessionId": envelope.session_id}
+            {"envelope": envelope_payload, "sessionId": envelope.session_id}
         ).encode()
         request = urllib.request.Request(
             self.url,

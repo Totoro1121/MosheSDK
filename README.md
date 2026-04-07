@@ -10,6 +10,11 @@ model calls.
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](packages/moshe-sdk-ts)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](packages/moshe-sdk-python)
 
+> **Status: Developer Preview — v0.1.0.**
+> The public API is stabilising. Minor breaking changes may occur before v1.0.
+> We welcome early adopters and contributors; evaluate carefully before
+> production use.
+
 > 📹 **Demo video coming soon.**
 
 ---
@@ -231,6 +236,17 @@ output = await adapter.wrap_command(
     execute=lambda: run_shell("ls -la"),
 )
 ```
+
+> **Outbound rule evaluation order:** Rules are evaluated first-match-wins.
+> The first rule whose pattern matches the target determines the outcome -
+> subsequent rules are not evaluated. Place more specific `allow` rules
+> **before** broader `block` rules, not after.
+>
+> ```json
+> { "pattern": "internal.api.corp.com", "action": "allow" },
+> { "pattern": "*.corp.com",            "action": "block" }
+> ```
+> Reversing this order would block `internal.api.corp.com`.
 
 ---
 

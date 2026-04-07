@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 
 import { describe, expect, it } from 'vitest';
 
-import { AnthropicAdapter, BlockedActionError, FilePolicyProvider, GenericAdapter, InProcessApprovalProvider, MemoryStore, Moshe, OpenAIAdapter } from '@moshe/sdk';
+import { AnthropicAdapter, ApprovalBlockedError, BlockedActionError, FilePolicyProvider, GenericAdapter, InProcessApprovalProvider, MemoryStore, Moshe, OpenAIAdapter, ScrubbingTelemetrySink } from '@moshe/sdk';
 import type { ActionEnvelope } from '@moshe/spec';
 
 import { loadFixture } from '../../../test/fixtures.js';
@@ -172,5 +172,15 @@ describe('Moshe SDK', () => {
     })).rejects.toBeInstanceOf(BlockedActionError);
 
     await moshe.close();
+  });
+
+  it('ApprovalBlockedError and ScrubbingTelemetrySink are importable from @moshe/sdk', () => {
+    const sink = new ScrubbingTelemetrySink({
+      name: 'test-sink',
+      emit: async () => undefined
+    });
+
+    expect(new ApprovalBlockedError('fp')).toBeInstanceOf(Error);
+    expect(sink.name).toBe('scrubbing(test-sink)');
   });
 });

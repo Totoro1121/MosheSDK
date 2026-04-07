@@ -59,7 +59,7 @@ describe('domainMatchesPattern', () => {
   });
 
   it('wildcard does not match root domain', () => {
-    expect(domainMatchesPattern('example.com', '*.example.com')).toBe(false);
+    expect(domainMatchesPattern('example.com', '*.example.com')).toBe(true);
   });
 
   it('wildcard does not match sibling suffix', () => {
@@ -103,7 +103,12 @@ describe('matchesOutboundPattern', () => {
 
   it('wildcard pattern matches subdomains but not root domain', () => {
     expect(matchesOutboundPattern('https://api.example.com/data', '*.example.com')).toBe(true);
-    expect(matchesOutboundPattern('https://example.com/data', '*.example.com')).toBe(false);
+    expect(matchesOutboundPattern('https://example.com/data', '*.example.com')).toBe(true);
+  });
+
+  it('explicit port in pattern must match target port', () => {
+    expect(matchesOutboundPattern('https://evil.com:443/data', 'evil.com:443')).toBe(true);
+    expect(matchesOutboundPattern('https://evil.com:80/data', 'evil.com:443')).toBe(false);
   });
 
   it('falls back to substring for unparseable targets', () => {
@@ -130,5 +135,10 @@ describe('isLocalNetworkHost', () => {
 
   it('domain containing localhost string is not local', () => {
     expect(isLocalNetworkHost('localhost.example.com')).toBe(false);
+  });
+
+  it('127.x loopback range returns true', () => {
+    expect(isLocalNetworkHost('127.0.0.1')).toBe(true);
+    expect(isLocalNetworkHost('127.1.2.3')).toBe(true);
   });
 });

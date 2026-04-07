@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
 from urllib.error import URLError
 
 import pytest
+import warnings
 
 from moshe import CallbackDecisionProvider, HttpDecisionProvider, NoopDecisionProvider, PolicyConfig, ReasonCode, ToolArguments
 from moshe._interfaces import EngineContext, StageResult
@@ -111,3 +112,73 @@ def test_http_decision_provider_drops_malformed_matched_rules() -> None:
     assert result is not None
     assert result.matched_rules is not None
     assert len(result.matched_rules) == 1
+
+
+def test_http_decision_provider_warns_on_non_https_url() -> None:
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        HttpDecisionProvider("http://example.com")
+    assert len(caught) == 1
+
+
+def test_http_decision_provider_strips_sensitive_fields_from_payload() -> None:
+    provider = HttpDecisionProvider("https://example.com")
+    envelope_with_sensitive = ActionEnvelope(
+        action_id="a1",
+        session_id="s1",
+        timestamp="2025-01-01T00:00:00Z",
+        framework="test",
+        action_type="tool_call",
+        operation="call",
+        tool_name="search",
+        arguments=ToolArguments(
+            command="echo hi",
+            content="secret",
+            body="body",
+            headers={"Authorization": "x"},
+            params={"secret": "x"},
+        ),
+    )
+
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(request: object, timeout: float) -> object:
+        captured["body"] = request.data  # type: ignore[attr-defined]
+
+        class Response:
+            def __enter__(self) -> "Response":
+                return self
+
+            def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+                return None
+
+            def read(self) -> bytes:
+                return b'{"passed": true}'
+
+        return Response()
+
+    import urllib.request
+
+    original = urllib.request.urlopen
+    urllib.request.urlopen = fake_urlopen  # type: ignore[assignment]
+    try:
+        provider._sync_fetch(envelope_with_sensitive)  # type: ignore[attr-defined]
+    finally:
+        urllib.request.urlopen = original  # type: ignore[assignment]
+
+    body = json.loads(captured["body"].decode())  # type: ignore[index]
+    assert body == {
+        "envelope": {
+            "actionId": "a1",
+            "sessionId": "s1",
+            "timestamp": "2025-01-01T00:00:00Z",
+            "framework": "test",
+            "actionType": "tool_call",
+            "operation": "call",
+            "toolName": "search",
+            "arguments": {
+                "command": "echo hi",
+            },
+        },
+        "sessionId": "s1",
+    }

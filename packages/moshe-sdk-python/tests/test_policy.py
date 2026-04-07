@@ -6,6 +6,7 @@ import pytest
 
 from moshe import (
     MemoryStore,
+    Moshe,
     OutboundRule,
     PolicyConfig,
     RecipientThreshold,
@@ -87,6 +88,21 @@ async def test_evaluate_static_policy_reviews_sensitive_file() -> None:
 
 
 @pytest.mark.asyncio
+async def test_evaluate_static_policy_blocks_forbidden_file_case_insensitively() -> None:
+    upper = await evaluate_static_policy(
+        make_envelope(arguments=ToolArguments(path="/app/.ENV")),
+        await make_ctx(PolicyConfig(forbidden_files=[".env"])),
+    )
+    assert upper.decision == "BLOCK"
+
+    mixed = await evaluate_static_policy(
+        make_envelope(arguments=ToolArguments(path="/app/.Env")),
+        await make_ctx(PolicyConfig(forbidden_files=[".env"])),
+    )
+    assert mixed.decision == "BLOCK"
+
+
+@pytest.mark.asyncio
 async def test_evaluate_static_policy_reviews_recipient_threshold() -> None:
     result = await evaluate_static_policy(
         make_envelope(
@@ -115,6 +131,42 @@ async def test_evaluate_static_policy_blocks_outbound_rule() -> None:
 
 
 @pytest.mark.asyncio
+async def test_outbound_rules_wildcard_matches_apex_domain() -> None:
+    result = await evaluate_static_policy(
+        make_envelope(
+            action_type="outbound_request",
+            arguments=ToolArguments(url="https://evil.com/data"),
+            outbound_targets=["https://evil.com/data"],
+        ),
+        await make_ctx(PolicyConfig(outbound_rules=[OutboundRule(pattern="*.evil.com", action="block")])),
+    )
+    assert result.decision == "BLOCK"
+
+
+@pytest.mark.asyncio
+async def test_outbound_rules_honor_explicit_port() -> None:
+    matched = await evaluate_static_policy(
+        make_envelope(
+            action_type="outbound_request",
+            arguments=ToolArguments(url="https://evil.com:443/data"),
+            outbound_targets=["https://evil.com:443/data"],
+        ),
+        await make_ctx(PolicyConfig(outbound_rules=[OutboundRule(pattern="evil.com:443", action="block")])),
+    )
+    assert matched.decision == "BLOCK"
+
+    unmatched = await evaluate_static_policy(
+        make_envelope(
+            action_type="outbound_request",
+            arguments=ToolArguments(url="https://evil.com:80/data"),
+            outbound_targets=["https://evil.com:80/data"],
+        ),
+        await make_ctx(PolicyConfig(outbound_rules=[OutboundRule(pattern="evil.com:443", action="block")])),
+    )
+    assert unmatched.decision == "ALLOW"
+
+
+@pytest.mark.asyncio
 async def test_collect_then_decide_prefers_block_over_review() -> None:
     result = await evaluate_static_policy(
         make_envelope(arguments=ToolArguments(path="/etc/passwd", command="printenv API_KEY")),
@@ -127,6 +179,31 @@ async def test_collect_then_decide_prefers_block_over_review() -> None:
     )
     assert result.decision == "BLOCK"
     assert ReasonCode.FORBIDDEN_PATH in (result.reason_codes or [])
+
+
+@pytest.mark.asyncio
+async def test_sensitive_env_keys_scans_content_and_body() -> None:
+    content_result = await evaluate_static_policy(
+        make_envelope(
+            action_type="file_write",
+            operation="write",
+            tool_name="write_file",
+            arguments=ToolArguments(content="Value is $AWS_SECRET_ACCESS_KEY"),
+        ),
+        await make_ctx(PolicyConfig(sensitive_env_keys=["AWS_SECRET_ACCESS_KEY"])),
+    )
+    assert content_result.decision == "REVIEW"
+
+    body_result = await evaluate_static_policy(
+        make_envelope(
+            action_type="message_send",
+            operation="send",
+            tool_name="send_email",
+            arguments=ToolArguments(body="Value is $AWS_SECRET_ACCESS_KEY"),
+        ),
+        await make_ctx(PolicyConfig(sensitive_env_keys=["AWS_SECRET_ACCESS_KEY"])),
+    )
+    assert body_result.decision == "REVIEW"
 
 
 @pytest.mark.parametrize(
@@ -187,3 +264,13 @@ async def test_static_policy_provider_applies_presets() -> None:
     effective = await provider.get_effective()
     assert effective.forbidden_tools is not None
     assert "shell" in effective.forbidden_tools
+
+
+@pytest.mark.asyncio
+async def test_coding_agent_preset_blocks_root_path() -> None:
+    effective_policy = apply_preset_overlays(PolicyConfig(preset_overlays=["coding-agent"]), ["coding-agent"])
+    result = await evaluate_static_policy(
+        make_envelope(arguments=ToolArguments(path="/root/somefile")),
+        await make_ctx(effective_policy),
+    )
+    assert result.decision == "BLOCK"

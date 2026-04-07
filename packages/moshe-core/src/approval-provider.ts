@@ -24,6 +24,7 @@ export interface ApprovalContext {
 export interface InProcessApprovalProviderOptions {
   store: SessionStore & ArtifactStore;
   ttlMs?: number;
+  blockCooldownMs?: number;
   onApprovalRequired?: (context: ApprovalContext) => void | Promise<void>;
 }
 
@@ -58,14 +59,26 @@ function computeFingerprint(envelope: ActionEnvelope, sessionId: string): string
   return createHash('sha256').update(stable).digest('hex').slice(0, 32);
 }
 
+export class ApprovalBlockedError extends Error {
+  public readonly fingerprint: string;
+
+  public constructor(fingerprint: string) {
+    super('[MosheSDK] Action previously BLOCK-resolved; new request suppressed during cooldown.');
+    this.fingerprint = fingerprint;
+  }
+}
+
 export class InProcessApprovalProvider implements ApprovalProvider {
   private readonly ttlMs: number;
+  private readonly blockCooldownMs: number;
   private readonly onApprovalRequired: ((context: ApprovalContext) => void | Promise<void>) | undefined;
   private readonly pendingById = new Map<string, PendingApproval>();
   private readonly pendingByFingerprint = new Map<string, string>();
+  private readonly blockedFingerprints = new Map<string, number>();
 
   public constructor(private readonly options: InProcessApprovalProviderOptions) {
     this.ttlMs = options.ttlMs ?? 300_000;
+    this.blockCooldownMs = options.blockCooldownMs ?? this.ttlMs;
     this.onApprovalRequired = options.onApprovalRequired;
   }
 
@@ -73,6 +86,15 @@ export class InProcessApprovalProvider implements ApprovalProvider {
     this.cleanupExpired();
 
     const fingerprint = computeFingerprint(envelope, ctx.sessionId);
+    const blockExpiry = this.blockedFingerprints.get(fingerprint);
+    if (blockExpiry !== undefined) {
+      if (blockExpiry > Date.now()) {
+        throw new ApprovalBlockedError(fingerprint);
+      }
+
+      this.blockedFingerprints.delete(fingerprint);
+    }
+
     const replay = await ctx.sessionStore.getApprovalReplay(fingerprint);
     if (replay && replay.sessionId === ctx.sessionId && replay.resolvedDecision === 'ALLOW_SESSION' && !isExpired(replay.expiresAt)) {
       return null;
@@ -93,6 +115,7 @@ export class InProcessApprovalProvider implements ApprovalProvider {
       const previous = this.pendingById.get(previousId);
       if (previous?.resolution === 'BLOCK') {
         this.pendingById.delete(previousId);
+        this.pendingByFingerprint.delete(fingerprint);
       }
     }
 
@@ -136,6 +159,11 @@ export class InProcessApprovalProvider implements ApprovalProvider {
 
     pending.resolution = decision;
 
+    if (decision === 'BLOCK') {
+      this.blockedFingerprints.set(pending.fingerprint, Date.now() + this.blockCooldownMs);
+      this.pendingByFingerprint.delete(pending.fingerprint);
+    }
+
     if (decision === 'ALLOW_SESSION') {
       // TODO(PRD-J): revisit replay expiry policy and observability for long-lived approvals.
       await this.options.store.putApprovalReplay({
@@ -160,8 +188,15 @@ export class InProcessApprovalProvider implements ApprovalProvider {
   }
 
   private cleanupExpired(): void {
+    const now = Date.now();
+    for (const [fingerprint, expiry] of this.blockedFingerprints) {
+      if (expiry <= now) {
+        this.blockedFingerprints.delete(fingerprint);
+      }
+    }
+
     for (const [approvalId, pending] of this.pendingById) {
-      if (!pending.resolution && isExpired(pending.expiresAt)) {
+      if (isExpired(pending.expiresAt)) {
         this.pendingById.delete(approvalId);
         this.pendingByFingerprint.delete(pending.fingerprint);
       }

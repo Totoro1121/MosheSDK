@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from moshe import InProcessApprovalProvider, MemoryStore, PolicyConfig, ToolArguments
+from moshe._approval import ApprovalBlockedError
 from moshe._interfaces import EngineContext
 from moshe._types import ActionEnvelope
 
@@ -84,3 +87,43 @@ async def test_allow_once_replay_consumed_on_second_call() -> None:
     assert second is None
     third = await provider.create(envelope(), context(store))
     assert third is not None
+
+
+@pytest.mark.asyncio
+async def test_block_resolution_suppresses_create_during_cooldown_then_allows_again() -> None:
+    store = MemoryStore()
+    provider = InProcessApprovalProvider(store, ttl_ms=20)
+    request = await provider.create(envelope(), context(store))
+    assert request is not None
+    await provider.resolve(request.approval_id, "BLOCK")
+
+    with pytest.raises(ApprovalBlockedError):
+        await provider.create(envelope(), context(store))
+
+    await asyncio.sleep(0.03)
+    second = await provider.create(envelope(), context(store))
+    assert second is not None
+
+
+@pytest.mark.asyncio
+async def test_block_resolution_clears_pending_by_fingerprint() -> None:
+    store = MemoryStore()
+    provider = InProcessApprovalProvider(store)
+    request = await provider.create(envelope(), context(store))
+    assert request is not None
+    await provider.resolve(request.approval_id, "BLOCK")
+    assert provider._pending_by_fingerprint == {}  # type: ignore[attr-defined]
+
+
+@pytest.mark.asyncio
+async def test_resolved_approval_is_cleaned_after_ttl() -> None:
+    store = MemoryStore()
+    provider = InProcessApprovalProvider(store, ttl_ms=1)
+    request = await provider.create(envelope(), context(store))
+    assert request is not None
+    await provider.resolve(request.approval_id, "ALLOW_ONCE")
+    await asyncio.sleep(0.01)
+    second = await provider.create(envelope(), context(store))
+    assert second is not None
+    assert second.approval_id != request.approval_id
+    assert len(provider._pending_by_id) == 1  # type: ignore[attr-defined]
