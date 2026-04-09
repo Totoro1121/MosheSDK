@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/sdk",
-  "version": "0.1.0",
+  "name": "@moshesdk/sdk",
+  "version": "0.1.2",
   "description": "TypeScript SDK for MosheSDK — runtime security for AI agents",
   "license": "Apache-2.0",
   "keywords": [
@@ -35,12 +35,12 @@
     "dist"
   ],
   "dependencies": {
-    "@moshe/adapter-anthropic": "workspace:*",
-    "@moshe/adapter-generic-tools": "workspace:*",
-    "@moshe/adapter-openai": "workspace:*",
-    "@moshe/core": "workspace:*",
-    "@moshe/spec": "workspace:*",
-    "@moshe/store-file": "workspace:*",
-    "@moshe/store-memory": "workspace:*"
+    "@moshesdk/adapter-anthropic": "0.1.2",
+    "@moshesdk/adapter-generic-tools": "0.1.2",
+    "@moshesdk/adapter-openai": "0.1.2",
+    "@moshesdk/core": "0.1.2",
+    "@moshesdk/spec": "0.1.2",
+    "@moshesdk/store-file": "0.1.2",
+    "@moshesdk/store-memory": "0.1.2"
   }
 }

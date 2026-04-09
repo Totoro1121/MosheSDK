@@ -1,21 +1,21 @@
-# @moshe/adapter-generic-tools
+# @moshesdk/adapter-generic-tools
 
-`@moshe/adapter-generic-tools` provides lightweight wrapper helpers that turn normal tool, command, outbound request, and message-send calls into MosheSDK policy checks. It sits between your agent code and the engine so you can integrate enforcement without manually building `ActionEnvelope` objects.
+`@moshesdk/adapter-generic-tools` provides lightweight wrapper helpers that turn normal tool, command, outbound request, and message-send calls into MosheSDK policy checks. It sits between your agent code and the engine so you can integrate enforcement without manually building `ActionEnvelope` objects.
 
 ## Installation
 
-If you already use `@moshe/sdk`, this adapter is included through the top-level SDK export surface.
+If you already use `@moshesdk/sdk`, this adapter is included through the top-level SDK export surface.
 
 For custom integrations that only need the adapter layer:
 
 ```bash
-pnpm add @moshe/adapter-generic-tools @moshe/core @moshe/spec
+pnpm add @moshesdk/adapter-generic-tools @moshesdk/core @moshesdk/spec
 ```
 
 ## Basic Usage
 
 ```typescript
-import { GenericAdapter, Moshe } from '@moshe/sdk';
+import { GenericAdapter, Moshe } from '@moshesdk/sdk';
 
 const moshe = new Moshe({
   policy: { version: '0.1.0', forbiddenCommands: ['rm\\s+-rf\\s+/'] },
@@ -54,7 +54,7 @@ await adapter.wrapMessage({
 ## Error Handling
 
 ```typescript
-import { BlockedActionError, ReviewRequiredError } from '@moshe/sdk';
+import { BlockedActionError, ReviewRequiredError } from '@moshesdk/sdk';
 
 try {
   await adapter.wrapCommand({

@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/spec",
-  "version": "0.1.0",
+  "name": "@moshesdk/spec",
+  "version": "0.1.2",
   "description": "MosheSDK shared types, schemas, and validators",
   "license": "Apache-2.0",
   "keywords": [

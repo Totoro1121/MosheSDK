@@ -1,6 +1,6 @@
 {
   "name": "moshesdk",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "license": "Apache-2.0",
   "description": "Runtime security SDK for AI agents — deterministic policy enforcement, approval workflows, taint tracking, and chain-risk detection.",
@@ -34,7 +34,7 @@
     "check": "pnpm build && pnpm test && pnpm example:minimal"
   },
   "dependencies": {
-    "@moshe/sdk": "workspace:*"
+    "@moshesdk/sdk": "0.1.2"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",

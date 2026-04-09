@@ -4,8 +4,8 @@ import {
   type GenericAdapterOptions,
   type SessionEvaluator,
   type WrapToolCallOptions
-} from '@moshe/adapter-generic-tools';
-import type { DecisionEnvelope, ToolArguments } from '@moshe/spec';
+} from '@moshesdk/adapter-generic-tools';
+import type { DecisionEnvelope, ToolArguments } from '@moshesdk/spec';
 
 import type { OpenAIToolCall, RootEvaluator, WrapOpenAIToolCallOptions } from './types.js';
 

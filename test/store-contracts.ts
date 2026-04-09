@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ArtifactStore, SessionStore, SessionState } from '@moshe/core';
+import type { ArtifactStore, SessionStore, SessionState } from '@moshesdk/core';
 
 interface ReplayStore {
   getApprovalReplay(approvalId: string): Promise<{

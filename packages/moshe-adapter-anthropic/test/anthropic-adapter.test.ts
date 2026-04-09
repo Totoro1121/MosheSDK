@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { BlockedActionError } from '@moshe/adapter-generic-tools';
-import { MemoryStore, Moshe } from '@moshe/sdk';
+import { BlockedActionError } from '@moshesdk/adapter-generic-tools';
+import { MemoryStore, Moshe } from '@moshesdk/sdk';
 
 import { AnthropicAdapter } from '../src/adapter.js';
 import type { AnthropicToolUseBlock } from '../src/types.js';

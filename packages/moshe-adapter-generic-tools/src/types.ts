@@ -1,5 +1,5 @@
-import type { ApprovalRequest, ActionType, DecisionEnvelope, ToolArguments } from '@moshe/spec';
-import type { EvaluateInput } from '@moshe/core';
+import type { ApprovalRequest, ActionType, DecisionEnvelope, ToolArguments } from '@moshesdk/spec';
+import type { EvaluateInput } from '@moshesdk/core';
 
 export interface SessionEvaluator {
   evaluate(input: Omit<EvaluateInput, 'sessionId'>): Promise<DecisionEnvelope>;

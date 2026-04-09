@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/adapter-anthropic",
-  "version": "0.1.0",
+  "name": "@moshesdk/adapter-anthropic",
+  "version": "0.1.2",
   "description": "MosheSDK Anthropic tool-use adapter — no anthropic SDK dependency required",
   "license": "Apache-2.0",
   "keywords": [
@@ -36,7 +36,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@moshe/adapter-generic-tools": "workspace:*",
-    "@moshe/spec": "workspace:*"
+    "@moshesdk/adapter-generic-tools": "0.1.2",
+    "@moshesdk/spec": "0.1.2"
   }
 }

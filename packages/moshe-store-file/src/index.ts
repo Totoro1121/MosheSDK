@@ -8,7 +8,7 @@ import type {
   SessionPutOptions,
   SessionState,
   SessionStore
-} from '@moshe/core';
+} from '@moshesdk/core';
 
 interface FileStoreData {
   sessions: Record<string, SessionState>;

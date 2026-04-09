@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { TelemetryEvent, TelemetryEventType } from '@moshe/spec';
+import type { TelemetryEvent, TelemetryEventType } from '@moshesdk/spec';
 
 import type { TelemetrySink } from './interfaces.js';
 

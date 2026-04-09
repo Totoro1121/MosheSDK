@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { ReasonCode, validatePolicyConfig, type PolicyConfig } from '@moshe/spec';
+import { ReasonCode, validatePolicyConfig, type PolicyConfig } from '@moshesdk/spec';
 
 import type { PolicyProvider } from './interfaces.js';
 import { validatePolicyRules } from './policy.js';

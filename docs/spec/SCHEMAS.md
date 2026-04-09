@@ -61,7 +61,7 @@ Supported policy fields include:
 
 ## Reason Codes
 
-Reason codes are exported from `@moshe/spec` through the `ReasonCode` constant so SDK and adapter integrations share one canonical decision vocabulary.
+Reason codes are exported from `@moshesdk/spec` through the `ReasonCode` constant so SDK and adapter integrations share one canonical decision vocabulary.
 
 ## TelemetryEvent
 
@@ -70,4 +70,4 @@ Telemetry events include an event id, event type, action id, session id, and opt
 ## Validator Behavior
 
 - All validator entry points return a typed success result or a list of schema errors.
-- The JSON Schema definitions live in `@moshe/spec` and are used by the validator layer.
+- The JSON Schema definitions live in `@moshesdk/spec` and are used by the validator layer.

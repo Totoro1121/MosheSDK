@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 
 import { describe, expect, it } from 'vitest';
 
-import { AnthropicAdapter, ApprovalBlockedError, BlockedActionError, FilePolicyProvider, GenericAdapter, InProcessApprovalProvider, MemoryStore, Moshe, OpenAIAdapter, ScrubbingTelemetrySink } from '@moshe/sdk';
-import type { ActionEnvelope } from '@moshe/spec';
+import { AnthropicAdapter, ApprovalBlockedError, BlockedActionError, FilePolicyProvider, GenericAdapter, InProcessApprovalProvider, MemoryStore, Moshe, OpenAIAdapter, ScrubbingTelemetrySink } from '@moshesdk/sdk';
+import type { ActionEnvelope } from '@moshesdk/spec';
 
 import { loadFixture } from '../../../test/fixtures.js';
 
@@ -105,7 +105,7 @@ describe('Moshe SDK', () => {
     await sdk.close();
   });
 
-  it('GenericAdapter and BlockedActionError are importable from @moshe/sdk', async () => {
+  it('GenericAdapter and BlockedActionError are importable from @moshesdk/sdk', async () => {
     const moshe = new Moshe({
       policy: {
         version: '0.1.0',
@@ -127,7 +127,7 @@ describe('Moshe SDK', () => {
     await moshe.close();
   });
 
-  it('InProcessApprovalProvider is importable from @moshe/sdk', () => {
+  it('InProcessApprovalProvider is importable from @moshesdk/sdk', () => {
     const store = new MemoryStore();
     const provider = new InProcessApprovalProvider({ store });
 
@@ -136,7 +136,7 @@ describe('Moshe SDK', () => {
     expect(typeof provider.check).toBe('function');
   });
 
-  it('OpenAIAdapter and AnthropicAdapter are importable from @moshe/sdk', async () => {
+  it('OpenAIAdapter and AnthropicAdapter are importable from @moshesdk/sdk', async () => {
     const moshe = new Moshe({
       policy: {
         version: '0.1.0',
@@ -174,7 +174,7 @@ describe('Moshe SDK', () => {
     await moshe.close();
   });
 
-  it('ApprovalBlockedError and ScrubbingTelemetrySink are importable from @moshe/sdk', () => {
+  it('ApprovalBlockedError and ScrubbingTelemetrySink are importable from @moshesdk/sdk', () => {
     const sink = new ScrubbingTelemetrySink({
       name: 'test-sink',
       emit: async () => undefined

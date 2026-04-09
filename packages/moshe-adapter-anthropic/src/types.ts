@@ -1,4 +1,4 @@
-import type { SessionEvaluator } from '@moshe/adapter-generic-tools';
+import type { SessionEvaluator } from '@moshesdk/adapter-generic-tools';
 
 export interface RootEvaluator {
   withSession(sessionId: string): SessionEvaluator;

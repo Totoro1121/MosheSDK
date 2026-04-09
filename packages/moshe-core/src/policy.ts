@@ -1,6 +1,6 @@
 import { Minimatch } from 'minimatch';
 
-import { ReasonCode, type ActionEnvelope, type DecisionEnvelope, type MatchedRule, type PolicyConfig } from '@moshe/spec';
+import { ReasonCode, type ActionEnvelope, type DecisionEnvelope, type MatchedRule, type PolicyConfig } from '@moshesdk/spec';
 
 import type { EngineContext, StageResult } from './interfaces.js';
 import { matchesOutboundPattern } from './outbound-utils.js';

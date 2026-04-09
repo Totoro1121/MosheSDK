@@ -1,4 +1,4 @@
-import type { ActionEnvelope } from '@moshe/spec';
+import type { ActionEnvelope } from '@moshesdk/spec';
 
 export type EvaluateInput = Omit<ActionEnvelope, 'actionId' | 'timestamp'>
   & Partial<Pick<ActionEnvelope, 'actionId' | 'timestamp'>>;

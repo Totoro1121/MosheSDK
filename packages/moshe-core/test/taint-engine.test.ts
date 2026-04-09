@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { ReasonCode, type ActionEnvelope, type DecisionEnvelope } from '@moshe/spec';
-import { MemoryStore } from '@moshe/store-memory';
-import { Moshe } from '@moshe/sdk';
+import { ReasonCode, type ActionEnvelope, type DecisionEnvelope } from '@moshesdk/spec';
+import { MemoryStore } from '@moshesdk/store-memory';
+import { Moshe } from '@moshesdk/sdk';
 
 import {
   analyzeTaint,

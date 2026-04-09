@@ -1,13 +1,13 @@
-# @moshe/sdk
+# @moshesdk/sdk
 
 TypeScript SDK for [MosheSDK](../../README.md) — runtime security for AI agents.
 
 ## Installation
 
 ```bash
-pnpm add @moshe/sdk
+pnpm add @moshesdk/sdk
 # or
-npm install @moshe/sdk
+npm install @moshesdk/sdk
 ```
 
 Requires Node.js ≥ 18. Zero mandatory runtime dependencies.
@@ -15,7 +15,7 @@ Requires Node.js ≥ 18. Zero mandatory runtime dependencies.
 ## Quick Start
 
 ```typescript
-import { GenericAdapter, MemoryStore, Moshe } from '@moshe/sdk';
+import { GenericAdapter, MemoryStore, Moshe } from '@moshesdk/sdk';
 
 const moshe = new Moshe({
   policy: {
@@ -41,7 +41,7 @@ const result = await adapter.wrapCommand({
 ## Adapters
 
 ```typescript
-import { AnthropicAdapter, OpenAIAdapter } from '@moshe/sdk';
+import { AnthropicAdapter, OpenAIAdapter } from '@moshesdk/sdk';
 
 // OpenAI tool calls
 const oa = new OpenAIAdapter(session);

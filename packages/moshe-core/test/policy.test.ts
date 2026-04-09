@@ -16,8 +16,8 @@ import {
   validatePolicyRules,
   type ActionEnvelope,
   type PolicyConfig
-} from '@moshe/core';
-import { ReasonCode } from '@moshe/spec';
+} from '@moshesdk/core';
+import { ReasonCode } from '@moshesdk/spec';
 
 import { loadFixture } from '../../../test/fixtures.js';
 

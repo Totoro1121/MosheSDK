@@ -127,7 +127,7 @@ API changes announced in [docs/Versions.md](docs/Versions.md). Patch bumps
 
 ### Publishing
 
-**TypeScript** — all eight `@moshe/*` packages:
+**TypeScript** — all eight `@moshesdk/*` packages:
 
 ```bash
 pnpm -r publish --access public

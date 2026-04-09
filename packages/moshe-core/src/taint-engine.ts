@@ -4,7 +4,7 @@ import {
   type DecisionEnvelope,
   type ProvenanceSummary,
   type TaintSummary
-} from '@moshe/spec';
+} from '@moshesdk/spec';
 
 import type { ArtifactRecord, SessionState } from './state.js';
 import type { EngineContext, StageResult } from './interfaces.js';

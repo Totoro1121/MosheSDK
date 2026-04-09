@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { InProcessApprovalProvider, MosheEngine, StaticPolicyProvider, type ActionEnvelope, type Analyzer, type DecisionEnvelope, type StageResult, type TelemetrySink } from '@moshe/core';
-import { ReasonCode } from '@moshe/spec';
-import { MemoryStore } from '@moshe/store-memory';
+import { InProcessApprovalProvider, MosheEngine, StaticPolicyProvider, type ActionEnvelope, type Analyzer, type DecisionEnvelope, type StageResult, type TelemetrySink } from '@moshesdk/core';
+import { ReasonCode } from '@moshesdk/spec';
+import { MemoryStore } from '@moshesdk/store-memory';
 
 function actionFixture(overrides: Partial<ActionEnvelope> = {}): ActionEnvelope {
   return {

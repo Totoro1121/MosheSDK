@@ -6,9 +6,9 @@ import {
   MosheAdapterError,
   ReviewRequiredError,
   type SessionEvaluator
-} from '@moshe/adapter-generic-tools';
-import { MemoryStore, Moshe } from '@moshe/sdk';
-import type { ActionEnvelope, ApprovalRequest, DecisionEnvelope } from '@moshe/spec';
+} from '@moshesdk/adapter-generic-tools';
+import { MemoryStore, Moshe } from '@moshesdk/sdk';
+import type { ActionEnvelope, ApprovalRequest, DecisionEnvelope } from '@moshesdk/spec';
 
 import { loadFixture } from '../../../test/fixtures.js';
 

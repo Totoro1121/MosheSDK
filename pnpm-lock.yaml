@@ -8,8 +8,8 @@ importers:
 
   .:
     dependencies:
-      '@moshe/sdk':
-        specifier: workspace:*
+      '@moshesdk/sdk':
+        specifier: 0.1.2
         version: link:packages/moshe-sdk-ts
     devDependencies:
       '@types/node':
@@ -24,35 +24,35 @@ importers:
 
   packages/moshe-adapter-anthropic:
     dependencies:
-      '@moshe/adapter-generic-tools':
-        specifier: workspace:*
+      '@moshesdk/adapter-generic-tools':
+        specifier: 0.1.2
         version: link:../moshe-adapter-generic-tools
-      '@moshe/spec':
-        specifier: workspace:*
+      '@moshesdk/spec':
+        specifier: 0.1.2
         version: link:../moshe-spec
 
   packages/moshe-adapter-generic-tools:
     dependencies:
-      '@moshe/core':
-        specifier: workspace:*
+      '@moshesdk/core':
+        specifier: 0.1.2
         version: link:../moshe-core
-      '@moshe/spec':
-        specifier: workspace:*
+      '@moshesdk/spec':
+        specifier: 0.1.2
         version: link:../moshe-spec
 
   packages/moshe-adapter-openai:
     dependencies:
-      '@moshe/adapter-generic-tools':
-        specifier: workspace:*
+      '@moshesdk/adapter-generic-tools':
+        specifier: 0.1.2
         version: link:../moshe-adapter-generic-tools
-      '@moshe/spec':
-        specifier: workspace:*
+      '@moshesdk/spec':
+        specifier: 0.1.2
         version: link:../moshe-spec
 
   packages/moshe-core:
     dependencies:
-      '@moshe/spec':
-        specifier: workspace:*
+      '@moshesdk/spec':
+        specifier: 0.1.2
         version: link:../moshe-spec
       minimatch:
         specifier: ^10.0.1
@@ -60,26 +60,26 @@ importers:
 
   packages/moshe-sdk-ts:
     dependencies:
-      '@moshe/adapter-anthropic':
-        specifier: workspace:*
+      '@moshesdk/adapter-anthropic':
+        specifier: 0.1.2
         version: link:../moshe-adapter-anthropic
-      '@moshe/adapter-generic-tools':
-        specifier: workspace:*
+      '@moshesdk/adapter-generic-tools':
+        specifier: 0.1.2
         version: link:../moshe-adapter-generic-tools
-      '@moshe/adapter-openai':
-        specifier: workspace:*
+      '@moshesdk/adapter-openai':
+        specifier: 0.1.2
         version: link:../moshe-adapter-openai
-      '@moshe/core':
-        specifier: workspace:*
+      '@moshesdk/core':
+        specifier: 0.1.2
         version: link:../moshe-core
-      '@moshe/spec':
-        specifier: workspace:*
+      '@moshesdk/spec':
+        specifier: 0.1.2
         version: link:../moshe-spec
-      '@moshe/store-file':
-        specifier: workspace:*
+      '@moshesdk/store-file':
+        specifier: 0.1.2
         version: link:../moshe-store-file
-      '@moshe/store-memory':
-        specifier: workspace:*
+      '@moshesdk/store-memory':
+        specifier: 0.1.2
         version: link:../moshe-store-memory
 
   packages/moshe-spec:
@@ -90,14 +90,14 @@ importers:
 
   packages/moshe-store-file:
     dependencies:
-      '@moshe/core':
-        specifier: workspace:*
+      '@moshesdk/core':
+        specifier: 0.1.2
         version: link:../moshe-core
 
   packages/moshe-store-memory:
     dependencies:
-      '@moshe/core':
-        specifier: workspace:*
+      '@moshesdk/core':
+        specifier: 0.1.2
         version: link:../moshe-core
 
 packages:

@@ -15,10 +15,10 @@ import {
   type PolicyProvider,
   type SessionStore,
   type TelemetrySink
-} from '@moshe/core';
-import type { ActionEnvelope, DecisionEnvelope, PolicyConfig } from '@moshe/spec';
-import { FileStore } from '@moshe/store-file';
-import { MemoryStore } from '@moshe/store-memory';
+} from '@moshesdk/core';
+import type { ActionEnvelope, DecisionEnvelope, PolicyConfig } from '@moshesdk/spec';
+import { FileStore } from '@moshesdk/store-file';
+import { MemoryStore } from '@moshesdk/store-memory';
 
 type StoreLike = SessionStore & ArtifactStore & {
   close?: () => Promise<void>;
@@ -132,17 +132,17 @@ export {
   resolveLineage,
   ScrubbingTelemetrySink,
   validatePolicyRules
-} from '@moshe/core';
-export { OpenAIAdapter } from '@moshe/adapter-openai';
-export type { OpenAIAdapterOptions, OpenAIToolCall, WrapOpenAIToolCallOptions } from '@moshe/adapter-openai';
-export { AnthropicAdapter } from '@moshe/adapter-anthropic';
-export type { AnthropicAdapterOptions, AnthropicToolUseBlock, WrapAnthropicToolUseOptions } from '@moshe/adapter-anthropic';
+} from '@moshesdk/core';
+export { OpenAIAdapter } from '@moshesdk/adapter-openai';
+export type { OpenAIAdapterOptions, OpenAIToolCall, WrapOpenAIToolCallOptions } from '@moshesdk/adapter-openai';
+export { AnthropicAdapter } from '@moshesdk/adapter-anthropic';
+export type { AnthropicAdapterOptions, AnthropicToolUseBlock, WrapAnthropicToolUseOptions } from '@moshesdk/adapter-anthropic';
 export {
   BlockedActionError,
   GenericAdapter,
   MosheAdapterError,
   ReviewRequiredError
-} from '@moshe/adapter-generic-tools';
+} from '@moshesdk/adapter-generic-tools';
 export type {
   AdapterResult,
   GenericAdapterOptions,
@@ -151,7 +151,7 @@ export type {
   WrapMessageOptions,
   WrapOutboundOptions,
   WrapToolCallOptions
-} from '@moshe/adapter-generic-tools';
+} from '@moshesdk/adapter-generic-tools';
 export type {
   ApprovalContext,
   ApprovalResolution,
@@ -159,7 +159,7 @@ export type {
   DecisionCallback,
   HttpDecisionProviderOptions,
   InProcessApprovalProviderOptions
-} from '@moshe/core';
-export type { FeedbackSubmission } from '@moshe/core';
-export type * from '@moshe/spec';
-export type * from '@moshe/core';
+} from '@moshesdk/core';
+export type { FeedbackSubmission } from '@moshesdk/core';
+export type * from '@moshesdk/spec';
+export type * from '@moshesdk/core';

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 
 import { describe, expect, it } from 'vitest';
 
-import { FileStore } from '@moshe/store-file';
+import { FileStore } from '@moshesdk/store-file';
 
 import { runStoreContractTests } from '../../../test/store-contracts.js';
 

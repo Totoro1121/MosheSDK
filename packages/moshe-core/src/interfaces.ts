@@ -7,7 +7,7 @@ import type {
   PolicyConfig,
   ReasonCode,
   TelemetryEvent
-} from '@moshe/spec';
+} from '@moshesdk/spec';
 
 import type {
   ApprovalReplayEntry,

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ActionEnvelope, ApprovalRequest } from '@moshe/spec';
+import type { ActionEnvelope, ApprovalRequest } from '@moshesdk/spec';
 
 import type { ApprovalProvider, ArtifactStore, EngineContext, SessionStore } from './interfaces.js';
 

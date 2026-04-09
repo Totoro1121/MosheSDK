@@ -23,14 +23,14 @@ Spec -> Engine -> SDK -> Differentiation
 
 ## Package Dependency Graph
 
-- `@moshe/spec` has no workspace-package dependencies
-- `@moshe/core` depends on `@moshe/spec` only
-- `@moshe/store-memory` depends on `@moshe/core`
-- `@moshe/store-file` depends on `@moshe/core`
-- `@moshe/adapter-generic-tools` depends on `@moshe/spec` and `@moshe/core`
-- `@moshe/adapter-openai` depends on `@moshe/adapter-generic-tools` and `@moshe/spec`
-- `@moshe/adapter-anthropic` depends on `@moshe/adapter-generic-tools` and `@moshe/spec`
-- `@moshe/sdk` depends on `@moshe/spec`, `@moshe/core`, both stores, and the adapter packages
+- `@moshesdk/spec` has no workspace-package dependencies
+- `@moshesdk/core` depends on `@moshesdk/spec` only
+- `@moshesdk/store-memory` depends on `@moshesdk/core`
+- `@moshesdk/store-file` depends on `@moshesdk/core`
+- `@moshesdk/adapter-generic-tools` depends on `@moshesdk/spec` and `@moshesdk/core`
+- `@moshesdk/adapter-openai` depends on `@moshesdk/adapter-generic-tools` and `@moshesdk/spec`
+- `@moshesdk/adapter-anthropic` depends on `@moshesdk/adapter-generic-tools` and `@moshesdk/spec`
+- `@moshesdk/sdk` depends on `@moshesdk/spec`, `@moshesdk/core`, both stores, and the adapter packages
 - `packages/moshe-sdk-python` is a standalone Python package and is not part of the pnpm dependency graph
 
 Circular dependencies are not allowed.

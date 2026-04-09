@@ -3,7 +3,7 @@ import {
   type ActionEnvelope,
   type ChainRiskSummary,
   type DecisionEnvelope
-} from '@moshe/spec';
+} from '@moshesdk/spec';
 
 import type { EngineContext, StageResult } from './interfaces.js';
 import type { SessionState } from './state.js';

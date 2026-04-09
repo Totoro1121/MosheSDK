@@ -2,10 +2,10 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { describe, expect, it } from 'vitest';
 
-import { GenericAdapter, ReviewRequiredError } from '@moshe/adapter-generic-tools';
-import { Moshe } from '@moshe/sdk';
-import type { ActionEnvelope, ApprovalRequest, PolicyConfig } from '@moshe/spec';
-import { MemoryStore } from '@moshe/store-memory';
+import { GenericAdapter, ReviewRequiredError } from '@moshesdk/adapter-generic-tools';
+import { Moshe } from '@moshesdk/sdk';
+import type { ActionEnvelope, ApprovalRequest, PolicyConfig } from '@moshesdk/spec';
+import { MemoryStore } from '@moshesdk/store-memory';
 
 import { ApprovalBlockedError, InProcessApprovalProvider } from '../src/approval-provider.js';
 import type { EngineContext } from '../src/interfaces.js';
@@ -106,14 +106,14 @@ describe('InProcessApprovalProvider', () => {
 
   it('cleans up expired resolved approvals', async () => {
     const store = new MemoryStore();
-    const provider = new InProcessApprovalProvider({ store, ttlMs: 1 });
+    const provider = new InProcessApprovalProvider({ store, ttlMs: 20 });
     const ctx = makeCtx('resolved-expiry', store);
     const envelope = await makeEnvelope();
 
     const first = await provider.create(envelope, ctx);
     await provider.resolve((first as ApprovalRequest).approvalId, 'ALLOW_ONCE');
 
-    await delay(10);
+    await delay(25);
     const second = await provider.create(envelope, ctx);
     expect(second).not.toBeNull();
     expect((second as ApprovalRequest).approvalId).not.toBe((first as ApprovalRequest).approvalId);

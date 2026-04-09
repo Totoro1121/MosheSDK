@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/adapter-generic-tools",
-  "version": "0.1.0",
+  "name": "@moshesdk/adapter-generic-tools",
+  "version": "0.1.2",
   "description": "MosheSDK generic tool adapter — wrap any tool call through the safety pipeline",
   "license": "Apache-2.0",
   "keywords": [
@@ -36,7 +36,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@moshe/core": "workspace:*",
-    "@moshe/spec": "workspace:*"
+    "@moshesdk/core": "0.1.2",
+    "@moshesdk/spec": "0.1.2"
   }
 }

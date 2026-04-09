@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/store-memory",
-  "version": "0.1.0",
+  "name": "@moshesdk/store-memory",
+  "version": "0.1.2",
   "description": "MosheSDK in-memory session, artifact, and approval store",
   "license": "Apache-2.0",
   "keywords": [
@@ -35,6 +35,6 @@
     "dist"
   ],
   "dependencies": {
-    "@moshe/core": "workspace:*"
+    "@moshesdk/core": "0.1.2"
   }
 }

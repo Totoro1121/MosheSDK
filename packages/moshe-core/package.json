@@ -1,6 +1,6 @@
 {
-  "name": "@moshe/core",
-  "version": "0.1.0",
+  "name": "@moshesdk/core",
+  "version": "0.1.2",
   "description": "MosheSDK core engine — 7-stage pipeline, policy, analyzers, taint, chain risk",
   "license": "Apache-2.0",
   "keywords": [
@@ -35,7 +35,7 @@
     "dist"
   ],
   "dependencies": {
-    "@moshe/spec": "workspace:*",
+    "@moshesdk/spec": "0.1.2",
     "minimatch": "^10.0.1"
   }
 }

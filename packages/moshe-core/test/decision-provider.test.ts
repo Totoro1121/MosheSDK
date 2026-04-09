@@ -13,9 +13,9 @@ import {
   type DecisionProvider,
   type EngineContext,
   type StageResult
-} from '@moshe/core';
-import { ReasonCode } from '@moshe/spec';
-import { MemoryStore } from '@moshe/store-memory';
+} from '@moshesdk/core';
+import { ReasonCode } from '@moshesdk/spec';
+import { MemoryStore } from '@moshesdk/store-memory';
 
 function actionFixture(overrides: Partial<ActionEnvelope> = {}): ActionEnvelope {
   return {

@@ -11,7 +11,7 @@ import {
   type DecisionEnvelope,
   type PolicyConfig,
   type TelemetryEvent
-} from '@moshe/spec';
+} from '@moshesdk/spec';
 
 import type { EngineConfig, EngineContext, StageResult } from './interfaces.js';
 import { collectMatchedRules, decisionFromResults, evaluateStaticPolicy, validatePolicyRules } from './policy.js';

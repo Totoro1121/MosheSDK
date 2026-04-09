@@ -6,8 +6,8 @@ import {
   validateActionEnvelope,
   validateDecisionEnvelope,
   validatePolicyConfig
-} from '@moshe/spec';
-import type { ActionEnvelope, PolicyConfig } from '@moshe/spec';
+} from '@moshesdk/spec';
+import type { ActionEnvelope, PolicyConfig } from '@moshesdk/spec';
 
 import { loadFixture } from '../../../test/fixtures.js';
 

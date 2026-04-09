@@ -5,7 +5,7 @@ import type {
   SessionPutOptions,
   SessionState,
   SessionStore
-} from '@moshe/core';
+} from '@moshesdk/core';
 
 function clone<T>(value: T): T {
   return structuredClone(value);

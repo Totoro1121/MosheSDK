@@ -1,4 +1,4 @@
-import { ReasonCode, type ActionEnvelope } from '@moshe/spec';
+import { ReasonCode, type ActionEnvelope } from '@moshesdk/spec';
 
 import type { Analyzer, EngineContext, StageResult } from './interfaces.js';
 import { isLocalNetworkHost, parseOutboundTarget } from './outbound-utils.js';

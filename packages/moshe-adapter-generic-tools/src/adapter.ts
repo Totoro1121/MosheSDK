@@ -1,5 +1,5 @@
-import type { EvaluateInput } from '@moshe/core';
-import type { DecisionEnvelope } from '@moshe/spec';
+import type { EvaluateInput } from '@moshesdk/core';
+import type { DecisionEnvelope } from '@moshesdk/spec';
 
 import {
   type AdapterResult,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MemoryStore } from '@moshe/store-memory';
+import { MemoryStore } from '@moshesdk/store-memory';
 
 import { runStoreContractTests } from '../../../test/store-contracts.js';
 

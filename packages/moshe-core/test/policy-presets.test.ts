@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import type { PolicyConfig } from '@moshe/spec';
+import type { PolicyConfig } from '@moshesdk/spec';
 
 import {
   applyPresetOverlays,

@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import type { TelemetryEvent } from '@moshe/spec';
-import { MemoryStore, Moshe } from '@moshe/sdk';
+import type { TelemetryEvent } from '@moshesdk/spec';
+import { MemoryStore, Moshe } from '@moshesdk/sdk';
 
 import type { FeedbackSubmission } from '../src/telemetry.js';
 import { FeedbackEmitter, MemoryTelemetrySink, ScrubbingTelemetrySink } from '../src/telemetry.js';

@@ -13,7 +13,7 @@ import {
   Moshe,
   resolveLineage,
   ReviewRequiredError
-} from '@moshe/sdk';
+} from '@moshesdk/sdk';
 
 async function loadJson(relativePath) {
   const fileUrl = new URL(relativePath, import.meta.url);

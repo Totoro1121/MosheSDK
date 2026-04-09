@@ -4,9 +4,9 @@ import {
   ReasonCode,
   type ActionEnvelope,
   type DecisionEnvelope
-} from '@moshe/spec';
-import { MemoryStore } from '@moshe/store-memory';
-import { InProcessApprovalProvider, Moshe } from '@moshe/sdk';
+} from '@moshesdk/spec';
+import { MemoryStore } from '@moshesdk/store-memory';
+import { InProcessApprovalProvider, Moshe } from '@moshesdk/sdk';
 
 import type { EngineContext } from '../src/interfaces.js';
 import type { SessionState } from '../src/state.js';

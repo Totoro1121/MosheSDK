@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version as package_version
 from typing import Any
 
 from ._adapter import (
@@ -38,6 +39,11 @@ from ._store import ApprovalReplayEntry, ArtifactRecord, MemoryStore, SessionSta
 from ._approval import ApprovalBlockedError
 from ._telemetry import FeedbackEmitter, FeedbackSubmission, MemoryTelemetrySink, ScrubbingTelemetrySink
 from ._types import *
+
+try:
+    __version__ = package_version("moshe")
+except PackageNotFoundError:
+    __version__ = "0.1.1"
 
 
 def _iso_now() -> str:
@@ -156,6 +162,7 @@ class MosheSession:
 
 
 __all__ = [
+    "__version__",
     "Moshe",
     "MosheSession",
     "MemoryStore",

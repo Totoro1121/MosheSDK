@@ -1,4 +1,4 @@
-import { ReasonCode, type ActionEnvelope, type Decision, type MatchedRule } from '@moshe/spec';
+import { ReasonCode, type ActionEnvelope, type Decision, type MatchedRule } from '@moshesdk/spec';
 
 import type { DecisionProvider, EngineContext, StageResult } from './interfaces.js';
 

@@ -4,13 +4,13 @@
 workflows, taint tracking, and chain-risk detection — all in-process, without
 model calls.
 
-[![npm](https://img.shields.io/npm/v/@moshe/sdk)](https://www.npmjs.com/package/@moshe/sdk)
+[![npm](https://img.shields.io/npm/v/@moshesdk/sdk)](https://www.npmjs.com/package/@moshesdk/sdk)
 [![PyPI](https://img.shields.io/pypi/v/moshe)](https://pypi.org/project/moshe/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](packages/moshe-sdk-ts)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](packages/moshe-sdk-python)
 
-> **Status: Developer Preview — v0.1.0.**
+> **Status: Developer Preview — v0.1.2.**
 > The public API is stabilising. Minor breaking changes may occur before v1.0.
 > We welcome early adopters and contributors; evaluate carefully before
 > production use.
@@ -166,10 +166,13 @@ or `REVIEW`.
 **TypeScript:**
 
 ```bash
-pnpm add @moshe/sdk
+pnpm add @moshesdk/sdk
 # or
-npm install @moshe/sdk
+npm install @moshesdk/sdk
 ```
+
+> The TypeScript SDK is ESM-first. Use `import` (or dynamic `import()`), not
+> CommonJS `require()`.
 
 **Python:**
 
@@ -186,7 +189,7 @@ No transitive runtime dependencies in either SDK.
 **TypeScript:**
 
 ```typescript
-import { GenericAdapter, MemoryStore, Moshe } from '@moshe/sdk';
+import { GenericAdapter, MemoryStore, Moshe } from '@moshesdk/sdk';
 
 const moshe = new Moshe({
   policy: {
@@ -265,7 +268,7 @@ import {
   MemoryStore,
   MemoryTelemetrySink,
   Moshe
-} from '@moshe/sdk';
+} from '@moshesdk/sdk';
 
 const store = new MemoryStore();
 const telemetry = new MemoryTelemetrySink();
@@ -341,7 +344,7 @@ Use the adapter that matches how your agent framework delivers tool calls:
 **OpenAI (TypeScript):**
 
 ```typescript
-import { OpenAIAdapter } from '@moshe/sdk';
+import { OpenAIAdapter } from '@moshesdk/sdk';
 
 const adapter = new OpenAIAdapter(session);
 const result = await adapter.wrapToolCall({
@@ -365,7 +368,7 @@ result = await adapter.wrap_tool_call(
 **Anthropic (TypeScript):**
 
 ```typescript
-import { AnthropicAdapter } from '@moshe/sdk';
+import { AnthropicAdapter } from '@moshesdk/sdk';
 
 const adapter = new AnthropicAdapter(session);
 const result = await adapter.wrapToolUse({
@@ -490,14 +493,14 @@ Use: `HttpDecisionProvider` + telemetry sinks + a persistent store implementatio
 
 ```
 packages/
-  moshe-spec/              TypeScript types, schemas, validators (@moshe/spec)
-  moshe-core/              Engine, policy, analyzers, taint, chain risk (@moshe/core)
-  moshe-store-memory/      In-memory store (@moshe/store-memory)
-  moshe-store-file/        File-backed store (@moshe/store-file)
-  moshe-adapter-generic-tools/  GenericAdapter (@moshe/adapter-generic-tools)
-  moshe-adapter-openai/    OpenAI tool-call adapter (@moshe/adapter-openai)
-  moshe-adapter-anthropic/ Anthropic tool-use adapter (@moshe/adapter-anthropic)
-  moshe-sdk-ts/            TypeScript SDK entry point (@moshe/sdk)
+  moshe-spec/              TypeScript types, schemas, validators (@moshesdk/spec)
+  moshe-core/              Engine, policy, analyzers, taint, chain risk (@moshesdk/core)
+  moshe-store-memory/      In-memory store (@moshesdk/store-memory)
+  moshe-store-file/        File-backed store (@moshesdk/store-file)
+  moshe-adapter-generic-tools/  GenericAdapter (@moshesdk/adapter-generic-tools)
+  moshe-adapter-openai/    OpenAI tool-call adapter (@moshesdk/adapter-openai)
+  moshe-adapter-anthropic/ Anthropic tool-use adapter (@moshesdk/adapter-anthropic)
+  moshe-sdk-ts/            TypeScript SDK entry point (@moshesdk/sdk)
   moshe-sdk-python/        Python SDK (moshe on PyPI)
 examples/
   minimal-ts/              End-to-end TypeScript example

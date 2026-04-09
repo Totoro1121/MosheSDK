@@ -1,4 +1,4 @@
-import type { OutboundRule, PolicyConfig } from '@moshe/spec';
+import type { OutboundRule, PolicyConfig } from '@moshesdk/spec';
 
 export const PRESET_NAMES = ['coding-agent', 'assistant-with-tools', 'browsing-agent'] as const;
 export type PresetName = (typeof PRESET_NAMES)[number];
